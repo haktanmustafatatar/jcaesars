@@ -1,0 +1,1402 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  Bot,
+  ChevronRight,
+  Globe,
+  FileText,
+  MessageSquare,
+  Sparkles,
+  Check,
+  Languages,
+  User,
+  Settings2,
+  Phone,
+  Instagram,
+  Send,
+  Plus,
+  Trash2,
+  Palette,
+  Eye,
+  Search,
+  Loader2,
+  ExternalLink,
+  RefreshCw,
+  Type,
+  Sun,
+  Moon,
+  AlignLeft,
+  AlignRight,
+  AlertCircle,
+  Database,
+  Rocket,
+  ArrowLeft,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+
+const STEPS = [
+  { id: "start", label: "Intro", icon: Globe },
+  { id: "sources", label: "Sources", icon: Database },
+  { id: "ui", label: "Agent's UI", icon: Palette },
+  { id: "personality", label: "Personality", icon: Bot },
+  { id: "deploy", label: "Deploy", icon: Rocket },
+];
+
+export default function NewChatbotPage() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState("start");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState<string[]>([]);
+  const [isCrawling, setIsCrawling] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Data for sources
+  const [discoveredLinks, setDiscoveredLinks] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDocuments, setSelectedDocuments] = useState<File[]>([]);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    websiteUrl: "",
+    useCase: "general",
+    language: "en",
+    rawText: "",
+    qnaList: [{ question: "", answer: "" }],
+    systemPrompt: "",
+    businessContext: "",
+    temperature: 0.7,
+    model: "GPT-4o",
+    welcomeMessage: "Hi! How can I help you today?",
+    primaryColor: "#000000",
+    suggestedMessages: ["What is this website about?", "How can I contact you?"],
+    appearance: "light" as "light" | "dark",
+    usePrimaryColorForHeader: false,
+  });
+
+  const [activeSourceTab, setActiveSourceTab] = useState("website");
+  const [websiteSubTab, setWebsiteSubTab] = useState("crawl");
+  const [showAdvancedData, setShowAdvancedData] = useState(false);
+  const [includeMatchType, setIncludeMatchType] = useState("starts_with");
+  const [excludeMatchType, setExcludeMatchType] = useState("contains");
+  const [customizationTab, setCustomizationTab] = useState("content");
+  const [showWebsiteModal, setShowWebsiteModal] = useState(false);
+  const [showTextModal, setShowTextModal] = useState(false);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [showQAModal, setShowQAModal] = useState(false);
+
+  const personaPresets = [
+    { 
+      id: "sales", 
+      label: "Sales Agent", 
+      icon: Rocket,
+      promptTemplate: "### Business Context\n{businessContext}\n\n### Role\nYou are a world-class Sales Representative for JCaesar. Your primary goal is to convert visitors into leads or customers by highlighting product benefits and handling objections with charisma and professional persuasion.\n\n### Guidelines\n1. Be proactive and engaging.\n2. Always steer the conversation toward booking a demo or signing up.\n3. Use the provided knowledge to answer product questions accurately.\n4. If a user seems interested, ask for their contact information."
+    },
+    { 
+      id: "support", 
+      label: "Support Agent", 
+      icon: Phone,
+      promptTemplate: "### Business Context\n{businessContext}\n\n### Role\nYou are a professional and patient Customer Support Specialist for JCaesar. Your goal is to provide accurate, helpful, and concise answers based on the provided data sources.\n\n### Guidelines\n1. Prioritize accuracy and clarity.\n2. If the answer is not in the knowledge base, politely inform the user and offer to escalate to a human agent.\n3. Maintain a helpful and empathetic tone.\n4. Ask for the user's email if follow-up is required."
+    },
+    { 
+      id: "general", 
+      label: "General AI", 
+      icon: Bot,
+      promptTemplate: "### Business Context\n{businessContext}\n\n### Role\nYou are a knowledgeable and versatile AI Assistant powered by JCaesar. You can help with a wide range of tasks based on the provided company data.\n\n### Guidelines\n1. Be informative and professional.\n2. Adapt your tone to the user's inquiry.\n3. Stick strictly to the provided knowledge base.\n4. Provide structured and easy-to-read responses."
+    },
+    { 
+      id: "custom", 
+      label: "Custom Prompt", 
+      icon: Settings2,
+      promptTemplate: "{businessContext}\n\n[Write your own custom instructions here...]"
+    }
+  ];
+
+  const generatePrompt = (useCaseId: string) => {
+    const preset = personaPresets.find(p => p.id === useCaseId) || personaPresets[2];
+    const generated = preset.promptTemplate.replace("{businessContext}", formData.businessContext || "[Add business context above to see it here]");
+    setFormData(prev => ({ ...prev, systemPrompt: generated, useCase: useCaseId }));
+  };
+
+  const handleAnalysis = async () => {
+    if (!formData.websiteUrl) {
+      toast.error("Please enter a website URL");
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    setAnalysisStatus([]);
+    
+    try {
+      setAnalysisStatus(prev => [...prev, "Fetching brand assets..."]);
+      const res = await fetch("/api/chatbots/analyze", {
+        method: "POST",
+        body: JSON.stringify({ 
+          url: formData.websiteUrl,
+          useCase: formData.useCase 
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setAnalysisStatus(prev => [...prev, "Reading website content..."]);
+      await new Promise(r => setTimeout(r, 800)); // Smooth UX
+      
+      setAnalysisStatus(prev => [...prev, "Optimizing system instructions..."]);
+      await new Promise(r => setTimeout(r, 600));
+
+      setFormData(prev => ({
+        ...prev,
+        name: data.name,
+        description: data.description,
+        avatar: data.logo,
+        primaryColor: data.primaryColor,
+        systemPrompt: data.systemPrompt,
+        language: data.language || prev.language,
+      }));
+
+      setAnalysisStatus(prev => [...prev, "Ready to launch!"]);
+      toast.success("Intelligence analysis complete!");
+      
+      // Auto-crawl for links
+      handleCrawl();
+      setCurrentStep("sources");
+    } catch (error: any) {
+      toast.error(error.message || "Analysis failed");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleCrawl = async () => {
+    if (!formData.websiteUrl) {
+      toast.error("Please enter a website URL");
+      return;
+    }
+    setIsCrawling(true);
+    try {
+      const res = await fetch("/api/crawl/fetch-links", {
+        method: "POST",
+        body: JSON.stringify({ url: formData.websiteUrl }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      setDiscoveredLinks(data.links);
+      toast.success(`${data.links.length} links discovered!`);
+    } catch (error: any) {
+      toast.error(error.message || "Cloud not fetch links");
+    } finally {
+      setIsCrawling(false);
+    }
+  };
+
+  const toggleLinkSelection = (index: number) => {
+    const updated = [...discoveredLinks];
+    updated[index].selected = !updated[index].selected;
+    setDiscoveredLinks(updated);
+  };
+
+  const selectAllLinks = (selected: boolean) => {
+    setDiscoveredLinks(discoveredLinks.map(l => ({ ...l, selected })));
+  };
+
+  const handleNext = () => {
+    const currentIndex = STEPS.findIndex((s) => s.id === currentStep);
+    if (currentIndex < STEPS.length - 1) {
+      const nextStepId = STEPS[currentIndex + 1].id;
+      
+      // Auto-suggest name when moving to UI step if name is empty
+      if (nextStepId === "ui" && !formData.name) {
+        if (formData.websiteUrl) {
+          try {
+             const domain = new URL(formData.websiteUrl.startsWith('http') ? formData.websiteUrl : `https://${formData.websiteUrl}`).hostname;
+             setFormData(prev => ({ ...prev, name: domain.replace('www.', '') }));
+          } catch {
+             setFormData(prev => ({ ...prev, name: `Agent ${new Date().toLocaleDateString()}` }));
+          }
+        } else {
+          setFormData(prev => ({ ...prev, name: `Agent ${new Date().toLocaleDateString()}` }));
+        }
+      }
+
+      setCurrentStep(nextStepId);
+    }
+  };
+
+  const handlePrev = () => {
+    const currentIndex = STEPS.findIndex((s) => s.id === currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(STEPS[currentIndex - 1].id);
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      setIsCreating(true);
+      const res = await fetch("/api/chatbots", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create chatbot");
+      }
+
+      const chatbot = await res.json();
+      toast.success("Chatbot created successfully!");
+      router.push(`/dashboard/chatbots`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8 pt-4">
+      {/* Header - Chatbase Logo style (Centered) */}
+      <div className="flex justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-zinc-950 rounded-lg flex items-center justify-center text-white font-black text-xl">C</div>
+          <span className="font-bold text-xl tracking-tight">JCaesar</span>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex items-center justify-between gap-4 max-w-2xl mx-auto relative h-2">
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[2px] bg-muted/40" />
+          <motion.div 
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-primary transition-all duration-500" 
+            animate={{ width: `${(STEPS.findIndex(s => s.id === currentStep) / (STEPS.length - 1)) * 100}%` }}
+          />
+          {STEPS.map((step, index) => (
+            <div key={step.id} className="relative z-10 flex flex-col items-center gap-3">
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${
+                  STEPS.findIndex(s => s.id === currentStep) >= index 
+                    ? "bg-primary border-primary shadow-lg shadow-primary/20" 
+                    : "bg-white border-muted/60 text-muted-foreground"
+                }`}
+              >
+                {STEPS.findIndex(s => s.id === currentStep) > index ? (
+                  <Check className="w-5 h-5 text-white" />
+                ) : (
+                  <step.icon className={`w-5 h-5 ${STEPS.findIndex(s => s.id === currentStep) === index ? "text-white" : "text-muted-foreground"}`} />
+                )}
+              </div>
+              <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-500 ${
+                STEPS.findIndex(s => s.id === currentStep) >= index ? "text-primary" : "text-muted-foreground/60"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+      {/* Content */}
+      <motion.div
+        key={currentStep}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {currentStep === "start" && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-0 min-h-[600px] border border-zinc-100 rounded-[32px] overflow-hidden bg-white shadow-2xl shadow-black/5">
+            <div className="p-16 space-y-12 border-r border-zinc-100 flex flex-col justify-center">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Let's start with a link</h2>
+                <p className="text-zinc-500 font-medium text-lg">Share your website link, and we'll automatically build an AI agent trained on your content.</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold text-zinc-600">Your website URL</Label>
+                  <div className="flex gap-2">
+                    <Select defaultValue="https">
+                      <SelectTrigger className="w-[120px] h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="https">https://</SelectItem>
+                        <SelectItem value="http">http://</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      placeholder="example.com"
+                      className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 text-lg px-6 font-medium focus:bg-white transition-all shadow-none"
+                      value={formData.websiteUrl}
+                      onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold text-zinc-600">Use-case</Label>
+                  <Select value={formData.useCase} onValueChange={(v) => generatePrompt(v)}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General AI agent</SelectItem>
+                      <SelectItem value="sales">Sales agent</SelectItem>
+                      <SelectItem value="support">Support agent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="pt-4 space-y-4">
+                  <Button
+                    onClick={handleAnalysis}
+                    disabled={isAnalyzing || !formData.websiteUrl}
+                    className="w-full h-14 bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl font-black text-lg shadow-2xl shadow-black/10 transition-all disabled:opacity-50"
+                  >
+                    {isAnalyzing ? (
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Fetching brand colors...
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-center gap-4 py-2">
+                    <div className="h-[1px] flex-1 bg-zinc-100" />
+                    <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">Or</span>
+                    <div className="h-[1px] flex-1 bg-zinc-100" />
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => setCurrentStep("sources")}
+                    className="w-full h-14 text-zinc-400 hover:text-zinc-950 font-bold text-base transition-all"
+                  >
+                    Set up manually with other sources
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 0 Right Preview (Atmospheric) */}
+            <div className="bg-zinc-50/50 p-16 flex items-center justify-center relative overflow-hidden h-full">
+              <div 
+                className="absolute inset-0 opacity-[0.03]" 
+                style={{ 
+                  backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, 
+                  backgroundSize: '24px 24px' 
+                }} 
+              />
+              
+              <div className="relative w-full max-w-sm">
+                <div className="p-[2.5px] rounded-[30px] bg-gradient-to-br from-[#A855F7] via-[#F97316] to-[#F97316]/50 shadow-2xl">
+                  <div className="bg-white rounded-[28px] p-8 space-y-6">
+                    {/* Status List */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-950">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-zinc-50 border flex items-center justify-center text-zinc-400">
+                            <Eye className="w-3 h-3" />
+                          </div>
+                          <span>Fetching logo</span>
+                        </div>
+                        {isAnalyzing && analysisStatus.length > 0 ? (
+                          <Check className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border-2 border-zinc-100" />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-950">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-zinc-50 border flex items-center justify-center text-zinc-400">
+                            <Palette className="w-3 h-3" />
+                          </div>
+                          <span>Fetching brand color</span>
+                        </div>
+                        {isAnalyzing && analysisStatus.length > 1 ? (
+                          <Check className="w-4 h-4 text-emerald-500" />
+                        ) : isAnalyzing && analysisStatus.length === 1 ? (
+                          <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border-2 border-zinc-100" />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-950">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-zinc-50 border flex items-center justify-center text-zinc-400">
+                            <Globe className="w-3 h-3" />
+                          </div>
+                          <span>Fetching links</span>
+                        </div>
+                        <div className="w-4 h-4 rounded-full border-2 border-zinc-100" />
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-950">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-zinc-50 border flex items-center justify-center text-zinc-400">
+                            <Bot className="w-3 h-3" />
+                          </div>
+                          <span>Adjusting prompt</span>
+                        </div>
+                        <div className="w-4 h-4 rounded-full border-2 border-zinc-100" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Logo Badge */}
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 bg-zinc-950 border-4 border-white rounded-3xl shadow-2xl flex items-center justify-center text-white text-3xl font-black">
+                  C
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === "sources" && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-0 min-h-[600px] border border-zinc-100 rounded-[32px] overflow-hidden bg-white shadow-2xl shadow-black/5">
+            <div className="p-16 space-y-12 border-r border-zinc-100">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Add training sources</h2>
+                <p className="text-zinc-500 font-medium text-lg">You can add multiple sources to train your Agent, let's start with a file or a link to your site.</p>
+              </div>
+
+              <div className="space-y-0 divide-y divide-zinc-100 border-y border-zinc-100">
+                {/* File Source */}
+                <div 
+                  className="flex items-center justify-between py-6 cursor-pointer group hover:bg-zinc-50/50 transition-colors px-2"
+                  onClick={() => setShowFilesModal(true)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">File</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
+                    {selectedDocuments.length > 0 ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-zinc-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Text Source */}
+                <div 
+                  className="flex items-center justify-between py-6 cursor-pointer group hover:bg-zinc-50/50 transition-colors px-2"
+                  onClick={() => setShowTextModal(true)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
+                      <Type className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">Text</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
+                    {formData.rawText.length > 0 ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-zinc-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Website Source */}
+                <div 
+                  className="flex items-center justify-between py-6 cursor-pointer group hover:bg-zinc-50/50 transition-colors px-2"
+                  onClick={() => setShowWebsiteModal(true)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">Website</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
+                    {discoveredLinks.some(l => l.selected) ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-zinc-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Q&A Source */}
+                <div 
+                  className="flex items-center justify-between py-6 cursor-pointer group hover:bg-zinc-50/50 transition-colors px-2"
+                  onClick={() => setShowQAModal(true)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
+                      <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">Q&A</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
+                    {formData.qnaList.some(q => q.question.trim()) ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-zinc-400" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 pt-8">
+                <Button
+                  onClick={handleNext}
+                  disabled={isAnalyzing || isCrawling || !(discoveredLinks.some(l => l.selected) || selectedDocuments.length > 0 || formData.rawText.length > 0 || formData.qnaList.some(q => q.question.trim()))}
+                  className="w-full h-14 bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl font-black text-lg shadow-2xl shadow-black/10 transition-all disabled:opacity-50"
+                >
+                  {isAnalyzing || isCrawling ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Training...
+                    </div>
+                  ) : (
+                    "Train & continue"
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  onClick={handlePrev} 
+                  className="font-bold text-zinc-400 hover:text-zinc-950"
+                >
+                  Back
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Summary Sidebar (Chatbase style) */}
+            <div className="bg-zinc-50/50 p-16 flex items-center justify-center relative overflow-hidden h-full">
+              {/* Dotted Grid Pattern */}
+              <div 
+                className="absolute inset-0 opacity-[0.03]" 
+                style={{ 
+                  backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, 
+                  backgroundSize: '24px 24px' 
+                }} 
+              />
+              
+              <div className="relative w-full max-w-sm">
+                {/* Gradient Border Wrapper */}
+                <div className="p-[2.5px] rounded-[30px] bg-gradient-to-br from-[#A855F7] via-[#F97316] to-[#F97316]/50 shadow-2xl">
+                  <div className="bg-white rounded-[28px] p-10 space-y-8">
+                    <h3 className="text-2xl font-black tracking-tight text-zinc-950">Sources</h3>
+                    
+                    <div className="bg-zinc-50 rounded-2xl p-4 flex items-center justify-between border border-zinc-100">
+                      <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total size</span>
+                      <span className="text-xs font-mono font-bold text-zinc-700">{(formData.rawText.length / 1024).toFixed(1)} / 400 KB</span>
+                    </div>
+
+                    {!discoveredLinks.some(l => l.selected) && selectedDocuments.length === 0 && formData.rawText.length === 0 && (
+                      <div className="py-12 border-t border-zinc-50 text-center space-y-4">
+                        <div className="w-16 h-16 bg-zinc-50/50 rounded-full flex items-center justify-center mx-auto border border-zinc-100">
+                          <AlertCircle className="w-8 h-8 text-zinc-300" />
+                        </div>
+                        <p className="text-sm text-zinc-400 font-bold italic">No sources added yet</p>
+                      </div>
+                    )}
+
+                    {(discoveredLinks.some(l => l.selected) || selectedDocuments.length > 0 || formData.rawText.length > 0) && (
+                      <div className="space-y-3 pt-4 border-t border-zinc-50 animate-in fade-in slide-in-from-bottom-4">
+                         {discoveredLinks.some(l => l.selected) && (
+                           <div className="flex items-center justify-between text-xs font-bold text-zinc-600">
+                             <div className="flex items-center gap-2">
+                               <Globe className="w-4 h-4 text-zinc-400" />
+                               <span>Website</span>
+                             </div>
+                             <span className="text-zinc-400">{discoveredLinks.filter(l => l.selected).length} links</span>
+                           </div>
+                         )}
+                         {selectedDocuments.length > 0 && (
+                           <div className="flex items-center justify-between text-xs font-bold text-zinc-600">
+                             <div className="flex items-center gap-2">
+                               <FileText className="w-4 h-4 text-zinc-400" />
+                               <span>Files</span>
+                             </div>
+                             <span className="text-zinc-400">{selectedDocuments.length} items</span>
+                           </div>
+                         )}
+                         {formData.rawText.length > 0 && (
+                           <div className="flex items-center justify-between text-xs font-bold text-zinc-600">
+                             <div className="flex items-center gap-2">
+                               <Type className="w-4 h-4 text-zinc-400" />
+                               <span>Text</span>
+                             </div>
+                             <span className="text-zinc-400">{formData.rawText.length} chars</span>
+                           </div>
+                         )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === "ui" && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 min-h-[600px] items-start">
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Agent's UI</h2>
+                <p className="text-zinc-500 font-medium">Customize how your AI agent looks and behaves on your website.</p>
+              </div>
+
+              <div className="space-y-6 bg-white p-8 border rounded-[32px] shadow-sm">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-zinc-600">Chatbot name</Label>
+                    <Input 
+                      placeholder="My AI Agent" 
+                      className="h-12 rounded-xl border-zinc-100 bg-zinc-50/50 focus:bg-white transition-all shadow-none"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold text-zinc-600">Welcome message</Label>
+                    <Input 
+                      placeholder="Hi! How can I help you today?" 
+                      className="h-12 rounded-xl border-zinc-100 bg-zinc-50/50 focus:bg-white transition-all shadow-none"
+                      value={formData.welcomeMessage}
+                      onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <Label className="text-sm font-bold text-zinc-600">Appearance</Label>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        onClick={() => setFormData({ ...formData, appearance: "light" })}
+                        className={`w-12 h-12 rounded-xl border flex items-center justify-center cursor-pointer transition-all ${formData.appearance === "light" ? "bg-zinc-950 text-white border-zinc-950" : "bg-white text-zinc-400 hover:border-zinc-300"}`}
+                      >
+                        <Sun className="w-5 h-5" />
+                      </div>
+                      <div 
+                        onClick={() => setFormData({ ...formData, appearance: "dark" })}
+                        className={`w-12 h-12 rounded-xl border flex items-center justify-center cursor-pointer transition-all ${formData.appearance === "dark" ? "bg-zinc-950 text-white border-zinc-950" : "bg-white text-zinc-400 hover:border-zinc-300"}`}
+                      >
+                        <Moon className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <Label className="text-sm font-bold text-zinc-600">Primary color</Label>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-12 h-12 rounded-xl border shadow-sm cursor-pointer shrink-0" 
+                        style={{ backgroundColor: formData.primaryColor }}
+                        onClick={() => document.getElementById('color-picker')?.click()}
+                      >
+                        <Input 
+                          id="color-picker"
+                          type="color" 
+                          className="sr-only"
+                          value={formData.primaryColor}
+                          onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value.toUpperCase() })}
+                        />
+                      </div>
+                      <Input 
+                        type="text" 
+                        className="h-12 rounded-xl w-32 font-mono uppercase font-bold text-center"
+                        value={formData.primaryColor}
+                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value.toUpperCase() })}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-12 w-12 rounded-xl border"
+                        onClick={() => setFormData({ ...formData, primaryColor: "#000000" })}
+                      >
+                        <RefreshCw className="w-4 h-4 text-zinc-400" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <Label className="text-sm font-bold text-zinc-600">Use primary color for header</Label>
+                    <div 
+                      onClick={() => setFormData({ ...formData, usePrimaryColorForHeader: !formData.usePrimaryColorForHeader })}
+                      className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-all ${formData.usePrimaryColorForHeader ? "bg-emerald-500" : "bg-zinc-200"}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full transition-all ${formData.usePrimaryColorForHeader ? "ml-6" : "ml-0"}`} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-8 flex items-center justify-between border-t border-zinc-50">
+                   <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">Back</Button>
+                   <Button onClick={handleNext} className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl h-12 px-8 font-bold">
+                     Looks good
+                   </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Preview Sidebar (Mac Chrome style) */}
+            <div className="sticky top-8 space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Live preview</span>
+              </div>
+              <div className="bg-zinc-100/30 rounded-[40px] p-8 border border-zinc-100/50 relative aspect-[3/4] overflow-hidden flex flex-col group">
+                {/* Dotted Grid Background */}
+                <div 
+                  className="absolute inset-0 opacity-[0.02]" 
+                  style={{ 
+                    backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, 
+                    backgroundSize: '20px 20px' 
+                  }} 
+                />
+                
+                <div className="bg-white rounded-3xl shadow-2xl flex-1 flex flex-col overflow-hidden border border-zinc-100 relative">
+                  {/* Mac Chrome Header */}
+                  <div className="h-10 bg-zinc-50 border-b border-zinc-100 flex items-center px-4 gap-1.5 shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]" />
+                  </div>
+
+                  <div 
+                    className={`p-4 flex items-center gap-3 shrink-0 ${formData.usePrimaryColorForHeader ? "text-white" : "text-zinc-950 bg-white border-b"}`} 
+                    style={formData.usePrimaryColorForHeader ? { backgroundColor: formData.primaryColor } : {}}
+                  >
+                    <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${formData.usePrimaryColorForHeader ? "bg-white/20 border-white/20" : "bg-zinc-50 border-zinc-100"}`}>
+                      <Bot className={`w-5 h-5 ${formData.usePrimaryColorForHeader ? "text-white" : "text-zinc-400"}`} />
+                    </div>
+                    <span className="font-bold text-sm truncate">{formData.name || "AI agent"}</span>
+                  </div>
+                  <div className={`flex-1 p-4 flex flex-col justify-end gap-3 ${formData.appearance === "dark" ? "bg-zinc-900" : "bg-zinc-50/50"}`}>
+                     <div className={`p-4 rounded-2xl rounded-bl-none shadow-sm border max-w-[85%] animate-in fade-in slide-in-from-bottom-2 ${formData.appearance === "dark" ? "bg-zinc-800 border-zinc-700 text-white" : "bg-white border-zinc-100 text-zinc-700"}`}>
+                        <p className="text-xs leading-relaxed font-medium">{formData.welcomeMessage}</p>
+                     </div>
+                  </div>
+                  <div className={`p-4 border-t flex gap-2 ${formData.appearance === "dark" ? "bg-zinc-900 border-zinc-800" : "bg-white"}`}>
+                     <div className={`flex-1 h-10 rounded-full border px-4 flex items-center ${formData.appearance === "dark" ? "bg-zinc-800 border-zinc-700" : "bg-zinc-50 border-zinc-100"}`}>
+                        <span className="text-xs text-zinc-400">Type a message...</span>
+                     </div>
+                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg shrink-0" style={{ backgroundColor: formData.primaryColor }}>
+                        <Send className="w-4 h-4" />
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === "personality" && (
+          <div className="max-w-3xl mx-auto space-y-12 pb-24">
+            <div className="space-y-3 text-center">
+              <h2 className="text-4xl font-black tracking-tight text-zinc-950">Agent's Personality</h2>
+              <p className="text-zinc-500 font-medium">Fine-tune how your AI interacts with users and which model it uses.</p>
+            </div>
+
+            <div className="space-y-10">
+              {/* Model Selection */}
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">Model selection</Label>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div 
+                      onClick={() => setFormData({ ...formData, model: "GPT-4o" })}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${formData.model === "GPT-4o" ? "border-zinc-950 bg-zinc-950 text-white shadow-xl shadow-black/10 scale-[1.02]" : "bg-white border-zinc-100 hover:border-zinc-200"}`}
+                    >
+                       <div className="flex items-center justify-between mb-1">
+                         <span className="font-black text-sm tracking-tight">GPT-4o</span>
+                         <Check className={`w-4 h-4 ${formData.model === "GPT-4o" ? "text-white" : "text-transparent"}`} />
+                       </div>
+                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o" ? "text-zinc-400" : "text-zinc-400"}`}>Advanced reasoning and high-quality responses.</p>
+                    </div>
+                    <div 
+                      onClick={() => setFormData({ ...formData, model: "GPT-4o-mini" })}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${formData.model === "GPT-4o-mini" ? "border-zinc-950 bg-zinc-950 text-white shadow-xl shadow-black/10 scale-[1.02]" : "bg-white border-zinc-100 hover:border-zinc-200"}`}
+                    >
+                       <div className="flex items-center justify-between mb-1">
+                         <span className="font-black text-sm tracking-tight">GPT-4o mini</span>
+                         <Check className={`w-4 h-4 ${formData.model === "GPT-4o-mini" ? "text-white" : "text-transparent"}`} />
+                       </div>
+                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o-mini" ? "text-zinc-400" : "text-zinc-400"}`}>Blazing fast responses, perfect for simple FAQs.</p>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Instruction Style (the 4 styles requested) */}
+              <div className="space-y-4">
+                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">Agent style</Label>
+                 <div className="grid grid-cols-4 gap-3">
+                   {personaPresets.map((style) => (
+                     <div 
+                        key={style.id}
+                        onClick={() => generatePrompt(style.id)}
+                        className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col items-center gap-2 text-center group ${formData.useCase === style.id ? "bg-zinc-950 border-zinc-950 text-white shadow-xl" : "bg-white border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50"}`}
+                     >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${formData.useCase === style.id ? "bg-white/10" : "bg-zinc-100 group-hover:bg-zinc-200"}`}>
+                          <style.icon className={`w-5 h-5 ${formData.useCase === style.id ? "text-white" : "text-zinc-400"}`} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider">{style.label}</span>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+
+               {/* System Prompt (Editable) */}
+              <div className="space-y-3">
+                 <div className="flex items-center justify-between px-1">
+                    <Label className="text-xs font-black uppercase tracking-widest text-zinc-400">Instructions / Goal</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-[10px] uppercase font-black text-zinc-400 hover:text-zinc-950 flex gap-2"
+                      onClick={() => generatePrompt(formData.useCase)}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Regenerate
+                    </Button>
+                 </div>
+                 <Textarea 
+                    placeholder="Paste or write detailed instructions for the agent..."
+                    className="min-h-[400px] rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-sm leading-relaxed p-8 shadow-inner"
+                    value={formData.systemPrompt}
+                    onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
+                 />
+                 <p className="text-[11px] text-zinc-400 font-medium italic px-4">These instructions define the agent's persona and how it should handle user queries based on your sources.</p>
+              </div>
+
+              <div className="pt-8 flex justify-between items-center bg-white p-8 rounded-[32px] border">
+                <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">Back</Button>
+                <Button onClick={handleCreate} disabled={isCreating} className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl h-14 px-12 font-black text-lg shadow-2xl shadow-black/10">
+                  {isCreating ? (
+                    <div className="flex items-center gap-3">
+                       <Loader2 className="w-5 h-5 animate-spin" />
+                       Launching...
+                    </div>
+                  ) : (
+                    "Confirm settings"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === "deploy" && (
+          <div className="max-w-2xl mx-auto text-center space-y-12 py-12">
+            <div className="relative group">
+               <div className="absolute inset-0 flex items-center justify-center translate-y-4">
+                 <div className="w-48 h-48 bg-emerald-500/10 blur-[100px] rounded-full animate-pulse" />
+               </div>
+               <div className="relative w-32 h-32 bg-white rounded-[40px] border-4 border-zinc-100 flex items-center justify-center mx-auto shadow-2xl transition-transform group-hover:scale-105">
+                 <div className="w-20 h-20 bg-zinc-950 rounded-full flex items-center justify-center text-white">
+                    <Rocket className="w-10 h-10 animate-bounce" />
+                 </div>
+               </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h2 className="text-5xl font-black tracking-tight text-zinc-950">Chatbot created!</h2>
+              <p className="text-zinc-500 text-lg font-bold">Your agent is trained and ready to be deployed to your website.</p>
+            </div>
+
+            <div className="bg-white border rounded-[32px] p-8 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-zinc-50 border flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-zinc-950" />
+                </div>
+                <div>
+                  <p className="font-black text-sm text-zinc-950">{formData.name || "AI Agent"}</p>
+                  <p className="text-xs font-bold text-zinc-400">Ready for embed</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-full font-black text-[10px] uppercase border-zinc-100 px-4"
+                  onClick={() => router.push(`/dashboard/chatbots`)}
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="rounded-full font-black text-[10px] uppercase bg-zinc-950 text-white px-4"
+                  onClick={() => router.push(`/dashboard/settings`)}
+                >
+                  Embed code
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-400 font-bold italic pt-4">You can now test your chatbot in the dashboard or embed it directly into your site.</p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Website Modal (Overlay) */}
+      {showWebsiteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden border border-white/20"
+          >
+            <div className="p-10 border-b flex items-center justify-between bg-zinc-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[20px] bg-white border-2 border-zinc-50 shadow-sm flex items-center justify-center">
+                  <Globe className="w-6 h-6 text-zinc-950" />
+                </div>
+                <div>
+                  <h3 className="font-black text-2xl tracking-tighter text-zinc-950">Website Sources</h3>
+                  <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Connect your site knowledge</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowWebsiteModal(false)}
+                className="rounded-full h-12 w-12 hover:bg-zinc-100"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            <div className="px-10 py-4 bg-zinc-50/50 border-b flex gap-8">
+               {[
+                 { id: 'crawl', label: 'Crawl links' },
+                 { id: 'sitemap', label: 'Sitemap' },
+                 { id: 'manual', label: 'Individual link' }
+               ].map((tab) => (
+                 <button
+                   key={tab.id}
+                   onClick={() => setWebsiteSubTab(tab.id)}
+                   className={`text-[10px] font-black uppercase tracking-[0.2em] pb-3 border-b-2 transition-all ${websiteSubTab === tab.id ? 'border-zinc-950 text-zinc-950' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
+                 >
+                   {tab.label}
+                 </button>
+               ))}
+            </div>
+
+            <div className="p-10 space-y-8">
+              {websiteSubTab === 'crawl' && (
+                <div className="space-y-5">
+                  <div className="flex gap-3">
+                    <div className="flex-1 space-y-2">
+                       <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] pl-1">Target Website URL</Label>
+                       <div className="flex gap-2">
+                          <Select defaultValue="https">
+                            <SelectTrigger className="w-[120px] h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-zinc-100 shadow-2xl">
+                              <SelectItem value="https">https://</SelectItem>
+                              <SelectItem value="http">http://</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input 
+                            placeholder="vareno.com.tr" 
+                            className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-base px-5 font-bold flex-1"
+                            value={formData.websiteUrl}
+                            onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                          />
+                       </div>
+                    </div>
+                    <div className="flex items-end">
+                      <Button 
+                        onClick={handleCrawl}
+                        disabled={isCrawling || !formData.websiteUrl}
+                        className="h-14 px-8 rounded-2xl bg-zinc-950 hover:bg-zinc-900 text-white font-black text-base shadow-xl shadow-black/10 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                      >
+                        {isCrawling ? (
+                          <div className="flex items-center gap-3">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>FETCHING...</span>
+                          </div>
+                        ) : (
+                          "FETCH LINKS"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-[10px] font-black text-zinc-400 hover:text-zinc-950 p-0 uppercase tracking-widest"
+                      onClick={() => setShowAdvancedData(!showAdvancedData)}
+                    >
+                      <ChevronRight className={`w-4 h-4 mr-2 transition-transform ${showAdvancedData ? 'rotate-90' : ''}`} />
+                      Advanced options
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {websiteSubTab === 'manual' && (
+                <div className="space-y-6">
+                   <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">Input URL manually</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="https://vareno.com.tr/about" 
+                          className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-base px-5 font-bold flex-1"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              const url = (e.target as HTMLInputElement).value.trim();
+                              if (url.startsWith('http')) {
+                                setDiscoveredLinks(prev => [...prev, { url, selected: true }]);
+                                (e.target as HTMLInputElement).value = '';
+                                toast.success("Link added!");
+                              }
+                            }
+                          }}
+                        />
+                        <Button 
+                          className="h-14 px-8 rounded-2xl bg-zinc-950 text-white font-black"
+                          onClick={() => {
+                            const input = document.querySelector('input[placeholder="https://vareno.com.tr/about"]') as HTMLInputElement;
+                            const url = input.value.trim();
+                            if (url.startsWith('http')) {
+                              setDiscoveredLinks(prev => [...prev, { url, selected: true }]);
+                              input.value = '';
+                              toast.success("Link added!");
+                            } else {
+                              toast.error("Please enter a valid URL starting with http");
+                            }
+                          }}
+                        >
+                          ADD
+                        </Button>
+                      </div>
+                   </div>
+                </div>
+              )}
+
+              {websiteSubTab === 'sitemap' && (
+                <div className="space-y-6">
+                   <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">Sitemap URL</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="https://vareno.com.tr/sitemap.xml" 
+                          className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-base px-5 font-bold flex-1"
+                        />
+                        <Button className="h-14 px-8 rounded-2xl bg-zinc-950 text-white font-black">LOAD</Button>
+                      </div>
+                   </div>
+                </div>
+              )}
+
+              {discoveredLinks.length > 0 && (
+                <div className="space-y-5 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center justify-between border-b border-zinc-50 pb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base font-black text-zinc-950 tracking-tight">Discovered Content</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-600 border-green-100 text-[10px] px-2 py-0.5 font-black uppercase tracking-widest">{discoveredLinks.length} Links</Badge>
+                    </div>
+                    <div className="flex items-center gap-3 bg-zinc-50 px-3 py-1.5 rounded-full border border-zinc-100">
+                      <Search className="w-4 h-4 text-zinc-300" />
+                      <Input 
+                        placeholder="Filter..." 
+                        className="h-6 w-32 text-xs border-none bg-transparent shadow-none focus-visible:ring-0 px-0 font-bold text-zinc-600"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border border-zinc-100 rounded-[32px] overflow-hidden max-h-[350px] overflow-y-auto bg-zinc-50/30 custom-scrollbar">
+                    <table className="w-full text-sm">
+                      <thead className="bg-white border-b text-zinc-400 text-[10px] uppercase font-black tracking-widest sticky top-0 z-10">
+                        <tr>
+                          <th className="p-5 w-10">
+                            <div className="flex items-center justify-center">
+                              <input 
+                                type="checkbox" 
+                                className="w-5 h-5 rounded-lg border-zinc-200 accent-zinc-950 cursor-pointer" 
+                                checked={discoveredLinks.length > 0 && discoveredLinks.every(l => l.selected)}
+                                onChange={(e) => selectAllLinks(e.target.checked)}
+                              />
+                            </div>
+                          </th>
+                          <th className="p-5 text-left">Internal Page URL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-50 bg-white">
+                        {discoveredLinks
+                          .filter(l => l.url.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((link, idx) => (
+                          <tr key={idx} className="hover:bg-zinc-50/50 transition-colors group cursor-default">
+                            <td className="p-5">
+                              <div className="flex items-center justify-center">
+                                <input 
+                                  type="checkbox" 
+                                  className="w-5 h-5 rounded-lg border-zinc-200 accent-zinc-950 cursor-pointer" 
+                                  checked={link.selected}
+                                  onChange={() => toggleLinkSelection(idx)}
+                                />
+                              </div>
+                            </td>
+                            <td className="p-5">
+                               <div className="flex flex-col">
+                                  <span className="font-bold text-zinc-950 truncate max-w-lg">{link.url}</span>
+                                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Last Crawled: Just now</span>
+                               </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-10 bg-zinc-50 flex items-center justify-between border-t border-zinc-100">
+                <div className="text-xs font-bold text-zinc-400 flex items-center gap-2 italic">
+                   <AlertCircle className="w-4 h-4 text-zinc-300" />
+                   We automatically filter duplicates and empty pages.
+                </div>
+                <Button 
+                  onClick={() => setShowWebsiteModal(false)}
+                  className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-[20px] font-black px-12 h-14 text-base shadow-xl shadow-black/10 transition-all active:scale-95"
+                >
+                  SAVE SOURCES
+                </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Text Source Modal */}
+      {showTextModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md">
+           <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden border"
+          >
+            <div className="p-8 border-b flex items-center justify-between bg-zinc-50/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[20px] bg-white border flex items-center justify-center">
+                  <Type className="w-6 h-6 text-zinc-950" />
+                </div>
+                <div>
+                  <h3 className="font-black text-2xl tracking-tighter">Text Input</h3>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Train with raw documentation</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowTextModal(false)} className="rounded-full h-10 w-10"><X className="w-5 h-5" /></Button>
+            </div>
+            <div className="p-10 space-y-4">
+               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">CONTENT</Label>
+               <Textarea 
+                 placeholder="Paste your business info, policy details, or any other raw text here..."
+                 className="min-h-[350px] rounded-[32px] bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-sm p-8 leading-relaxed"
+                 value={formData.rawText}
+                 onChange={(e) => setFormData({ ...formData, rawText: e.target.value })}
+               />
+               <div className="flex justify-between items-center px-4">
+                  <span className="text-[10px] font-bold text-zinc-400 italic">Recommended: Minimum 100 characters</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${formData.rawText.length > 400000 ? 'text-red-500' : 'text-zinc-500'}`}>
+                    {formData.rawText.length.toLocaleString()} / 400,000 Chars
+                  </span>
+               </div>
+            </div>
+            <div className="p-8 bg-zinc-50 border-t flex justify-end">
+              <Button 
+                onClick={() => setShowTextModal(false)}
+                className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-[20px] font-black px-12 h-14"
+              >
+                SAVE TEXT
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Q&A Modal */}
+      {showQAModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md">
+           <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden border"
+          >
+            <div className="p-8 border-b flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[20px] bg-zinc-50 flex items-center justify-center border">
+                  <MessageSquare className="w-6 h-6 text-zinc-950" />
+                </div>
+                <div>
+                  <h3 className="font-black text-2xl tracking-tighter">Q&A Sources</h3>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Add specific question-answer pairs</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowQAModal(false)} className="rounded-full h-10 w-10"><X className="w-5 h-5" /></Button>
+            </div>
+            <div className="p-10 max-h-[500px] overflow-y-auto space-y-6">
+              {formData.qnaList.map((qa, idx) => (
+                <div key={idx} className="p-8 rounded-[32px] bg-zinc-50 border border-zinc-100 space-y-6 group relative">
+                   <Button 
+                     variant="ghost" 
+                     size="icon" 
+                     className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                     onClick={() => setFormData({ ...formData, qnaList: formData.qnaList.filter((_, i) => i !== idx) })}
+                   >
+                     <Trash2 className="w-4 h-4 text-zinc-400" />
+                   </Button>
+                   <div className="space-y-2">
+                     <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">Question</Label>
+                     <Input 
+                        placeholder="e.g. What is your return policy?" 
+                        className="h-14 rounded-2xl border-white focus:bg-white shadow-sm font-bold"
+                        value={qa.question}
+                        onChange={(e) => {
+                          const newList = [...formData.qnaList];
+                          newList[idx].question = e.target.value;
+                          setFormData({ ...formData, qnaList: newList });
+                        }}
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">Answer</Label>
+                     <Textarea 
+                        placeholder="e.g. We offer a 30-day money back guarantee..." 
+                        className="min-h-[100px] rounded-2xl border-white focus:bg-white shadow-sm text-sm"
+                        value={qa.answer}
+                        onChange={(e) => {
+                          const newList = [...formData.qnaList];
+                          newList[idx].answer = e.target.value;
+                          setFormData({ ...formData, qnaList: newList });
+                        }}
+                     />
+                   </div>
+                </div>
+              ))}
+              <Button 
+                variant="outline" 
+                className="w-full h-16 rounded-[24px] border-dashed border-2 border-zinc-200 hover:border-zinc-950 font-black flex gap-3 text-zinc-400 hover:text-zinc-950 transition-all bg-zinc-50 hover:bg-white"
+                onClick={() => setFormData({ ...formData, qnaList: [...formData.qnaList, { question: "", answer: "" }] })}
+              >
+                <Plus className="w-5 h-5" />
+                ADD NEW QUESTION
+              </Button>
+            </div>
+            <div className="p-8 border-t flex justify-between items-center bg-zinc-50/50">
+               <span className="text-xs font-bold text-zinc-400 italic">Added {formData.qnaList.filter(q => q.question.trim()).length} pairs</span>
+               <Button 
+                onClick={() => setShowQAModal(false)}
+                className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-[20px] font-black px-12 h-14"
+              >
+                SAVE Q&A
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Files Modal */}
+      {showFilesModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md">
+           <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden border"
+          >
+            <div className="p-8 border-b flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[20px] bg-zinc-50 flex items-center justify-center border">
+                  <FileText className="w-6 h-6 text-zinc-950" />
+                </div>
+                <div>
+                  <h3 className="font-black text-2xl tracking-tighter">Documents</h3>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">PDF, DOCX, TXT training assets</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowFilesModal(false)} className="rounded-full h-10 w-10"><X className="w-5 h-5" /></Button>
+            </div>
+            <div className="p-10 space-y-10">
+               <div 
+                 className="h-64 rounded-[40px] border-4 border-dashed border-zinc-100 hover:border-zinc-950 transition-all flex flex-col items-center justify-center gap-4 cursor-pointer bg-zinc-50/50 hover:bg-white"
+                 onClick={() => document.getElementById('file-upload')?.click()}
+               >
+                  <div className="w-16 h-16 rounded-full bg-white border shadow-sm flex items-center justify-center">
+                    <Plus className="w-8 h-8 text-zinc-950" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-black text-lg tracking-tight">Click to upload or drag and drop</p>
+                    <p className="text-xs text-zinc-400 font-medium">Max size: 40MB per file</p>
+                  </div>
+                  <input 
+                    id="file-upload" 
+                    type="file" 
+                    multiple 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        setSelectedDocuments(Array.from(e.target.files));
+                        toast.success(`${e.target.files.length} files selected!`);
+                      }
+                    }}
+                  />
+               </div>
+
+               {selectedDocuments.length > 0 && (
+                 <div className="space-y-4">
+                    <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">SELECTED FILES ({selectedDocuments.length})</Label>
+                    <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2">
+                       {selectedDocuments.map((file, i) => (
+                         <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-white shadow-sm">
+                            <div className="flex items-center gap-3">
+                               <FileText className="w-4 h-4 text-zinc-400" />
+                               <span className="text-xs font-bold text-zinc-700 truncate max-w-[250px]">{file.name}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-zinc-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+            </div>
+            <div className="p-8 bg-zinc-50 border-t flex justify-end">
+               <Button 
+                onClick={() => setShowFilesModal(false)}
+                className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-[20px] font-black px-12 h-14 shadow-xl shadow-black/10"
+              >
+                SAVE DOCUMENTS
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,183 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Link2, Brain, Rocket } from "lucide-react";
+
+const steps = [
+  {
+    number: "01",
+    icon: Link2,
+    title: "Connect Your Data",
+    description:
+      "Enter your website URL or upload documents. Our AI automatically crawls and indexes all your content.",
+  },
+  {
+    number: "02",
+    icon: Brain,
+    title: "Train Your Bot",
+    description:
+      "Customize responses, set the personality, and fine-tune how your bot answers questions.",
+  },
+  {
+    number: "03",
+    icon: Rocket,
+    title: "Deploy & Embed",
+    description:
+      "Get your embed code and add the chatbot to your website in seconds. No coding required.",
+  },
+];
+
+export function HowItWorks() {
+  return (
+    <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-sm font-medium text-primary mb-4 tracking-wider uppercase"
+          >
+            Simple Process
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight"
+            style={{ fontFamily: "var(--font-fraunces)" }}
+          >
+            Build Your Chatbot in 3 Easy Steps
+          </motion.h2>
+        </div>
+
+        {/* Steps */}
+        <div className="relative">
+          {/* Timeline Line */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border hidden lg:block" />
+
+          <div className="space-y-16 lg:space-y-24">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.number}
+                initial={{
+                  opacity: 0,
+                  x: index % 2 === 0 ? -50 : 50,
+                }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className={`relative grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${
+                  index % 2 === 1 ? "lg:direction-rtl" : ""
+                }`}
+              >
+                {/* Content */}
+                <div
+                  className={`${index % 2 === 1 ? "lg:order-2 lg:text-left" : "lg:text-right"}`}
+                >
+                  <div
+                    className={`inline-flex items-center gap-4 mb-4 ${
+                      index % 2 === 1 ? "lg:flex-row" : "lg:flex-row-reverse"
+                    }`}
+                  >
+                    <span className="text-5xl font-bold text-primary/20">
+                      {step.number}
+                    </span>
+                    <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
+                      <step.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-semibold mb-4">
+                    {step.title}
+                  </h3>
+                  <p className="text-lg text-muted-foreground">
+                    {step.description}
+                  </p>
+                </div>
+
+                {/* Visual */}
+                <div
+                  className={`${index % 2 === 1 ? "lg:order-1" : ""}`}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-white rounded-2xl p-8 border border-black/5 shadow-lg"
+                  >
+                    {index === 0 && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 bg-muted rounded-xl">
+                          <Link2 className="w-5 h-5 text-primary" />
+                          <span className="text-sm font-medium">
+                            https://your-website.com
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <span className="text-xs text-muted-foreground">
+                            Crawling 247 pages...
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {index === 1 && (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-muted rounded-xl">
+                          <p className="text-sm font-medium mb-2">Personality</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {["Friendly", "Professional", "Casual"].map((t) => (
+                              <span
+                                key={t}
+                                className={`px-3 py-1 rounded-full text-xs ${
+                                  t === "Professional"
+                                    ? "bg-primary text-white"
+                                    : "bg-white border"
+                                }`}
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Brain className="w-4 h-4 text-primary" />
+                          <span>Training model...</span>
+                        </div>
+                      </div>
+                    )}
+                    {index === 2 && (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-zinc-900 rounded-xl font-mono text-xs text-green-400 overflow-x-auto">
+                          <p>{`<script`}</p>
+                          <p className="pl-4">{`src="https://jcaesar.agent/embed.js"`}</p>
+                          <p className="pl-4">{`data-bot-id="your-bot-id"`}</p>
+                          <p>{`></script>`}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Rocket className="w-4 h-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">
+                            Ready to deploy!
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Timeline Node */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-4 border-white shadow-lg hidden lg:block"
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

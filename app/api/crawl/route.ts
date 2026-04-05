@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { addCrawlJob } from "@/lib/queue";
+
+// POST /api/crawl - Yeni crawl işlemi başlat
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { chatbotId, url, type = "crawl-website", maxDepth = 3, limit = 100 } = await req.json();
+
+    // Chatbot'u kontrol et
+    const chatbot = await prisma.chatbot.findFirst({
+      where: { id: chatbotId, userId },
+    });
+
+    if (!chatbot) {
+      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    // Data source oluştur
+    const dataSource = await prisma.dataSource.create({
+      data: {
+        chatbotId,
+        type: "WEBSITE",
+        name: url,
+        url,
+        status: "PENDING",
+        crawlDepth: maxDepth,
+      },
+    });
+
+    // Queue'ya crawl job ekle
+    const job = await addCrawlJob({
+      type,
+      url,
+      maxDepth,
+      limit,
+      chatbotId,
+      dataSourceId: dataSource.id,
+      userId,
+    });
+
+    return NextResponse.json({
+      success: true,
+      dataSourceId: dataSource.id,
+      jobId: job.id,
+      message: "Crawl job queued successfully",
+    });
+  } catch (error) {
+    console.error("Crawl error:", error);
+    return NextResponse.json(
+      { error: "Failed to start crawl" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/crawl/status - Crawl durumunu kontrol et
+export async function GET(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const dataSourceId = searchParams.get("dataSourceId");
+
+    if (!dataSourceId) {
+      return NextResponse.json(
+        { error: "dataSourceId required" },
+        { status: 400 }
+      );
+    }
+
+    const dataSource = await prisma.dataSource.findFirst({
+      where: {
+        id: dataSourceId,
+        chatbot: { userId },
+      },
+      include: {
+        _count: {
+          select: { documents: true },
+        },
+      },
+    });
+
+    if (!dataSource) {
+      return NextResponse.json(
+        { error: "Data source not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      id: dataSource.id,
+      status: dataSource.status,
+      url: dataSource.url,
+      pagesCount: dataSource.pagesCount,
+      documentsCount: dataSource._count.documents,
+      crawlStatus: dataSource.crawlStatus,
+      lastCrawledAt: dataSource.lastCrawledAt,
+      createdAt: dataSource.createdAt,
+    });
+  } catch (error) {
+    console.error("Crawl status error:", error);
+    return NextResponse.json(
+      { error: "Failed to get crawl status" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/crawl - Data source sil
+export async function DELETE(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const dataSourceId = searchParams.get("dataSourceId");
+
+    if (!dataSourceId) {
+      return NextResponse.json(
+        { error: "dataSourceId required" },
+        { status: 400 }
+      );
+    }
+
+    // Data source'u sil (cascade ile dokümanlar da silinir)
+    await prisma.dataSource.deleteMany({
+      where: {
+        id: dataSourceId,
+        chatbot: { userId },
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete crawl error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete data source" },
+      { status: 500 }
+    );
+  }
+}

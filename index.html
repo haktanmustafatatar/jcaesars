@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.Caesar Agent - AI Chatbot SaaS Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .header {
+            padding: 1.5rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e25b31 0%, #ff8a65 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .badge {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, #e25b31 0%, #ff8a65 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .feature {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(226, 91, 49, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 1rem;
+        }
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .feature p {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .tech-stack {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        .tech-stack h2 {
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+        }
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .tech-badge {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .install {
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .install h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .code-block {
+            background: #0d0d0d;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+        .code-block code {
+            color: #4ade80;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+        .code-block .comment {
+            color: #666;
+        }
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #666;
+        }
+        .api-list {
+            padding: 3rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .api-list h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .api-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .api-item .status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .api-item .status.ready { background: #22c55e; }
+        .api-item .status.pending { background: #f59e0b; }
+        .api-item span { font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">🤖</div>
+            <span class="logo-text">J.Caesar Agent</span>
+        </div>
+        <div class="badge">
+            <span class="badge-dot"></span>
+            <span>Production Ready</span>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>AI Chatbot SaaS<br><span>Platformu</span></h1>
+        <p>İşletmelerin kendi markaları altında AI destekli müşteri destek ajanları oluşturup çoklu kanallarda yayınlayabildiği kapsamlı bir SaaS platformu.</p>
+    </section>
+
+    <section class="features">
+        <div class="feature">
+            <div class="feature-icon">🤖</div>
+            <h3>Vercel AI SDK</h3>
+            <p>Gerçek zamanlı streaming yanıtlar. GPT-4o, Claude 3.5 Sonnet, Claude 3 Haiku desteği.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🌐</div>
+            <h3>Firecrawl Entegrasyonu</h3>
+            <p>Otomatik website crawling, sitemap desteği, PDF/DOCX/TXT dosya işleme.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🔍</div>
+            <h3>pgvector RAG Pipeline</h3>
+            <p>Semantic search, 512 token chunk'lar, cosine similarity ile doküman arama.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">📨</div>
+            <h3>Omnichannel Inbox</h3>
+            <p>WhatsApp, Instagram, Facebook, Slack, Telegram, Email kanalları tek ekranda.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>BullMQ Queue Sistemi</h3>
+            <p>Background job processing, crawl işlemleri, bildirimler, token loglama.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">💳</div>
+            <h3>Stripe Entegrasyonu</h3>
+            <p>Abonelik yönetimi, 14 günlük deneme, token bazlı fiyatlandırma.</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🎫</div>
+            <h3>Token Yönetimi</h3>
+            <p>Gerçek token sayımı, model bazlı çarpanlar (GPT-4o: 5x, Mini: 1x).</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🔐</div>
+            <h3>Clerk Auth</h3>
+            <p>Multi-tenant workspace, takım üyesi davet, rol yönetimi.</p>
+        </div>
+    </section>
+
+    <section class="tech-stack">
+        <h2>Teknoloji Stack</h2>
+        <div class="tech-grid">
+            <span class="tech-badge">Next.js 15</span>
+            <span class="tech-badge">React 19</span>
+            <span class="tech-badge">TypeScript</span>
+            <span class="tech-badge">Tailwind CSS</span>
+            <span class="tech-badge">shadcn/ui</span>
+            <span class="tech-badge">Vercel AI SDK</span>
+            <span class="tech-badge">Clerk</span>
+            <span class="tech-badge">Prisma</span>
+            <span class="tech-badge">PostgreSQL + pgvector</span>
+            <span class="tech-badge">Redis + BullMQ</span>
+            <span class="tech-badge">Stripe</span>
+            <span class="tech-badge">Firecrawl</span>
+        </div>
+    </section>
+
+    <section class="api-list">
+        <h2>API Entegrasyonları</h2>
+        <div class="api-grid">
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>OpenAI GPT-4o / GPT-4o-mini</span>
+            </div>
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>Anthropic Claude 3.5 Sonnet / Haiku</span>
+            </div>
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>Firecrawl Website Crawling</span>
+            </div>
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>Stripe Payments & Subscriptions</span>
+            </div>
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>Clerk Authentication</span>
+            </div>
+            <div class="api-item">
+                <div class="status ready"></div>
+                <span>BullMQ Job Queue</span>
+            </div>
+            <div class="api-item">
+                <div class="status pending"></div>
+                <span>Meta WhatsApp Cloud API</span>
+            </div>
+            <div class="api-item">
+                <div class="status pending"></div>
+                <span>Meta Instagram Graph API</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="install">
+        <h2>Kurulum</h2>
+        <div class="code-block">
+            <code>
+                <span class="comment"># 1. Bağımlılıkları yükle</span><br>
+                npm install --legacy-peer-deps<br><br>
+                <span class="comment"># 2. Environment değişkenlerini ayarla</span><br>
+                cp .env.example .env.local<br><br>
+                <span class="comment"># 3. Veritabanını kur</span><br>
+                npx prisma migrate dev<br>
+                npx prisma generate<br><br>
+                <span class="comment"># 4. Geliştirme sunucusunu başlat</span><br>
+                npm run dev<br><br>
+                <span class="comment"># 5. Worker'ları başlat (ayrı terminal)</span><br>
+                npm run worker
+            </code>
+        </div>
+        <div class="code-block">
+            <code>
+                <span class="comment"># Docker ile çalıştırma</span><br>
+                docker-compose up -d
+            </code>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>J.Caesar Agent v1.0 | AI Chatbot SaaS Platform</p>
+        <p style="margin-top: 0.5rem; font-size: 0.875rem;">© 2026 Tüm hakları saklıdır.</p>
+    </footer>
+</body>
+</html>

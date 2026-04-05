@@ -1,0 +1,606 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { 
+  Settings, 
+  Bot, 
+  Palette, 
+  Sparkles, 
+  Save, 
+  ChevronLeft,
+  Loader2,
+  Trash2,
+  Globe,
+  Lock,
+  MessageSquare,
+  Zap
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import Link from "next/link";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+
+export default function SettingsPage() {
+  const params = useParams();
+  const router = useRouter(); // Use Next.js router from next/navigation for production if needed, but here we stay consistent with earlier choice if possible. Actually next/navigation is better.
+  const id = params.id as string;
+  
+  const [chatbot, setChatbot] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+  const [dataSources, setDataSources] = useState<any[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    fetchChatbot();
+  }, [id]);
+
+  const fetchChatbot = async () => {
+    try {
+      const res = await fetch(`/api/chatbots/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setChatbot(data);
+        setFormData(data);
+        fetchDataSources();
+      }
+    } catch (error) {
+      console.error("Error fetching chatbot:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchDataSources = async () => {
+    try {
+      const res = await fetch(`/api/chatbots/${id}/data-sources`);
+      if (res.ok) {
+        const data = await res.json();
+        setDataSources(data);
+      }
+    } catch (error) {
+      console.error("Error fetching data sources:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/chatbots/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        toast.success("Settings updated successfully");
+        setChatbot(formData);
+      } else {
+        toast.error("Failed to update settings");
+      }
+    } catch (error) {
+      toast.error("An error occurred while saving");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[600px] gap-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-zinc-500 font-medium animate-pulse uppercase tracking-widest text-xs">Accessing Neural Settings...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-10 max-w-6xl mx-auto pb-20">
+      {/* Elite Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div className="flex items-center gap-6">
+          <Link href={`/dashboard/chatbots/${id}`}>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-zinc-100">
+              <ChevronLeft className="w-6 h-6 text-zinc-400" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-500 bg-clip-text text-transparent">
+              Intelligence Forge
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium">
+              Fine-tune the neural core and appearance of your agent
+            </p>
+          </div>
+        </div>
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl h-12 px-10 font-bold shadow-xl shadow-black/10 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+          Sync Changes
+        </Button>
+      </div>
+
+      <Tabs defaultValue="general" className="space-y-10">
+        <TabsList className="bg-zinc-100/50 p-1.5 rounded-3xl border border-zinc-200">
+          <TabsTrigger value="general" className="rounded-2xl px-8 h-12 font-bold data-[state=active]:bg-white data-[state=active]:shadow-lg">
+            <Bot className="w-4 h-4 mr-2" /> General
+          </TabsTrigger>
+          <TabsTrigger value="personality" className="rounded-2xl px-8 h-12 font-bold data-[state=active]:bg-white data-[state=active]:shadow-lg">
+            <Sparkles className="w-4 h-4 mr-2" /> Personality
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="rounded-2xl px-8 h-12 font-bold data-[state=active]:bg-white data-[state=active]:shadow-lg">
+            <Palette className="w-4 h-4 mr-2" /> Appearance
+          </TabsTrigger>
+          <TabsTrigger value="training" className="rounded-2xl px-8 h-12 font-bold data-[state=active]:bg-white data-[state=active]:shadow-lg">
+            <Zap className="w-4 h-4 mr-2" /> Training
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="animate-in fade-in zoom-in-95 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-8">
+              <Card className="rounded-[40px] border-2 border-zinc-100 shadow-2xl shadow-black/5 overflow-hidden bg-white">
+                <CardHeader className="p-10 pb-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center">
+                      <Settings className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Identity Profile</CardTitle>
+                      <CardDescription className="text-zinc-400 font-medium tracking-tight mt-1">Basic identification and deployment settings</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+            <CardContent className="p-10 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Agent Name</Label>
+                  <Input 
+                    value={formData.name ?? ""} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev: any) => ({ ...prev, name: val }));
+                    }}
+                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium"
+                    placeholder={chatbot?.name || "e.g., JCaesar Sales Lead"}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Primary Language</Label>
+                  <Select value={formData.language} onValueChange={(v) => setFormData({ ...formData, language: v })}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-zinc-200">
+                      <SelectItem value="tr">Turkish</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Internal Description</Label>
+                <Textarea 
+                  value={formData.description ?? ""} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev: any) => ({ ...prev, description: val }));
+                  }}
+                  className="min-h-[120px] rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium resize-none p-6"
+                  placeholder={chatbot?.description || "What is the purpose of this agent?"}
+                />
+              </div>
+            </CardContent>
+              </Card>
+
+              <Card className="rounded-[40px] border-2 border-zinc-100 shadow-2xl shadow-black/5 overflow-hidden bg-white">
+                <CardHeader className="p-10 pb-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-500 flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Access & Security</CardTitle>
+                      <CardDescription className="text-zinc-400 font-medium tracking-tight mt-1">Control where and how your agent operates</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-10 space-y-8">
+                  <div className="flex items-center justify-between p-6 rounded-3xl bg-zinc-50">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-zinc-900">Public Visibility</h4>
+                      <p className="text-xs text-zinc-500 font-medium">Allow direct links to the chat interface</p>
+                    </div>
+                    <Switch 
+                      checked={formData.isPublic} 
+                      onCheckedChange={(v) => setFormData({...formData, isPublic: v})} 
+                      className="data-[state=checked]:bg-primary"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-8">
+              <Card className="rounded-[40px] border-2 border-zinc-100 bg-white p-8 overflow-hidden shadow-2xl shadow-black/5">
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-8">
+                  <Globe className="w-3 h-3" />
+                  Neural Health
+                </h3>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-zinc-600">Sync Status</span>
+                    <Badge variant="outline" className="rounded-full bg-green-50 text-green-600 border-green-200 uppercase text-[9px] font-black">Stable</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-zinc-600">Model Load</span>
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Optimal</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-zinc-600">RAG Latency</span>
+                    <span className="text-xs font-bold text-zinc-900">~140ms</span>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="p-10 rounded-[40px] bg-red-50 border-2 border-red-100 group cursor-pointer hover:bg-red-100 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <Trash2 className="w-6 h-6 text-red-500" />
+                  <h4 className="text-lg font-bold text-red-950">Danger Zone</h4>
+                </div>
+                <p className="text-sm text-red-800 font-medium leading-relaxed mb-6">Purge this agent's neural code and all accumulated data. This action is irreversible.</p>
+                <Button variant="destructive" className="w-full rounded-2xl h-12 font-bold shadow-xl shadow-red-500/20">
+                  Delete Agent Corrupt
+                </Button>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="personality" className="animate-in fade-in zoom-in-95 duration-500">
+          <Card className="rounded-[40px] border-2 border-zinc-100 shadow-2xl shadow-black/5 overflow-hidden bg-white max-w-4xl">
+            <CardHeader className="p-10 pb-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-500 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold">Neural Instructions</CardTitle>
+                  <CardDescription className="text-zinc-400 font-medium tracking-tight mt-1">Configure the behavioral logic and response characteristics</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-10 space-y-12">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pr-2">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">System Instructions (Expert Mode)</Label>
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                </div>
+                <Textarea 
+                  value={formData.systemPrompt ?? ""} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev: any) => ({ ...prev, systemPrompt: val }));
+                  }}
+                  className="min-h-[300px] rounded-3xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-mono text-sm leading-relaxed p-8 shadow-inner"
+                  placeholder="You are a helpful assistant..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Temperature</Label>
+                    <span className="text-xs font-black text-zinc-900 bg-zinc-100 px-3 py-1 rounded-full">{formData.temperature}</span>
+                  </div>
+                  <Slider 
+                    value={[formData.temperature || 0.7]} 
+                    min={0} 
+                    max={1} 
+                    step={0.1}
+                    onValueChange={([v]) => setFormData({...formData, temperature: v})}
+                  />
+                  <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">Lower values are more deterministic and precise. Higher values encourage creative exploration.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Max Response Tokens</Label>
+                    <span className="text-xs font-black text-zinc-900 bg-zinc-100 px-3 py-1 rounded-full">{formData.maxTokens}</span>
+                  </div>
+                  <Slider 
+                    value={[formData.maxTokens || 1000]} 
+                    min={256} 
+                    max={4096} 
+                    step={128}
+                    onValueChange={([v]) => setFormData({...formData, maxTokens: v})}
+                  />
+                  <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">Controls the maximum length of generated responses. 1000 tokens is approximately 750 words.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="appearance" className="animate-in fade-in zoom-in-95 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <Card className="rounded-[40px] border-2 border-zinc-100 shadow-2xl shadow-black/5 overflow-hidden bg-white">
+              <CardHeader className="p-10 pb-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center">
+                    <Palette className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold">Visual Language</CardTitle>
+                    <CardDescription className="text-zinc-400 font-medium tracking-tight mt-1">Customize the interface aesthetics for end users</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-10 space-y-10">
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Primary Brand Color</Label>
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-14 h-14 rounded-2xl shadow-xl ring-4 ring-white border border-zinc-100" 
+                      style={{ backgroundColor: formData.primaryColor }} 
+                    />
+                    <Input 
+                      value={formData.primaryColor ?? ""} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev: any) => ({ ...prev, primaryColor: val }));
+                      }}
+                      className="h-14 flex-1 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-mono"
+                      placeholder={chatbot?.primaryColor || "#e25b31"}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Integration Message</Label>
+                  <Input 
+                    value={formData.welcomeMessage ?? ""} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev: any) => ({ ...prev, welcomeMessage: val }));
+                    }}
+                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium"
+                    placeholder={chatbot?.welcomeMessage || "e.g., Hi! How can we assist you today?"}
+                  />
+                </div>
+
+                <div className="pt-4 flex items-center justify-between p-6 rounded-3xl bg-zinc-50">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-zinc-900">Show JCaesar Branding</h4>
+                    <p className="text-xs text-zinc-500 font-medium">Remove the 'Powered by JCaesar' badge</p>
+                  </div>
+                  <Switch 
+                    checked={!formData.showBranding} 
+                    onCheckedChange={(v) => setFormData({...formData, showBranding: !v})} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-8">
+               <div className="p-10 rounded-[40px] bg-zinc-950 text-white shadow-2xl shadow-black/20 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(226,91,49,0.2),transparent)] opacity-50" />
+                  <div className="relative z-10 w-full space-y-8 flex flex-col items-center">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Neural Preview</p>
+                    <div className="w-80 h-96 bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col">
+                      <div className="p-6 text-white flex items-center justify-between" style={{ backgroundColor: formData.primaryColor }}>
+                         <div className="flex items-center gap-3">
+                            <Bot className="w-5 h-5" />
+                            <span className="font-bold text-xs">{formData.name || "Agent"}</span>
+                         </div>
+                         <div className="w-2 h-2 rounded-full bg-white animate-ping" />
+                      </div>
+                      <div className="flex-1 p-6 flex items-end">
+                         <div className="bg-zinc-100 p-4 rounded-2xl rounded-bl-none text-[10px] font-bold text-zinc-700 leading-relaxed shadow-sm">
+                           {formData.welcomeMessage || "Hello! How can I help?"}
+                         </div>
+                      </div>
+                      <div className="p-4 border-t border-zinc-100 flex items-center gap-3">
+                         <div className="w-full h-10 bg-zinc-50 rounded-xl" />
+                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: formData.primaryColor }}>
+                            <Save className="w-4 h-4" />
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="training" className="animate-in fade-in zoom-in-95 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-8">
+              <Card className="rounded-[40px] border-2 border-zinc-100 shadow-2xl shadow-black/5 overflow-hidden bg-white">
+                <CardHeader className="p-10 pb-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl font-bold">Neural Knowledge</CardTitle>
+                        <CardDescription className="text-zinc-400 font-medium tracking-tight mt-1">Manage the core data that trains your agent</CardDescription>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-10 space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Data Sources</Label>
+                      <Button variant="ghost" size="sm" className="h-8 rounded-xl text-xs font-bold" onClick={() => fetchDataSources()}>
+                        <RefreshCw className={`w-3 h-3 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    </div>
+
+                    <div className="border border-zinc-100 rounded-[32px] overflow-hidden bg-zinc-50/30">
+                      <table className="w-full text-left">
+                        <thead className="bg-zinc-100/50 border-b border-zinc-100">
+                          <tr>
+                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Source</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {dataSources.length === 0 ? (
+                            <tr>
+                              <td colSpan={3} className="px-6 py-12 text-center text-zinc-400 font-medium text-sm italic">
+                                No intelligence sources connected yet.
+                              </td>
+                            </tr>
+                          ) : (
+                            dataSources.map((source) => (
+                              <tr key={source.id} className="group hover:bg-white transition-colors">
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-zinc-100 flex items-center justify-center">
+                                      {source.type === 'WEBSITE' ? <Globe className="w-4 h-4 text-zinc-400" /> : <MessageSquare className="w-4 h-4 text-zinc-400" />}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-bold text-zinc-900 truncate max-w-[240px]">{source.name}</span>
+                                      <span className="text-[10px] text-zinc-400 font-medium truncate max-w-[200px]">{source.url || 'Manual Entry'}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge className={`rounded-full px-3 py-0.5 text-[9px] font-black tracking-tighter uppercase ${
+                                    source.status === 'COMPLETED' ? 'bg-green-50 text-green-600 border-green-200' : 
+                                    source.status === 'PENDING' || source.status === 'CRAWLING' ? 'bg-blue-50 text-blue-600 border-blue-200 animate-pulse' :
+                                    'bg-red-50 text-red-600 border-red-200'
+                                  }`}>
+                                    {source.status}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-9 w-9 rounded-xl hover:bg-red-50 hover:text-red-500 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={async () => {
+                                      if(confirm('Delete this knowledge source?')) {
+                                        await fetch(`/api/chatbots/${id}/data-sources/${source.id}`, { method: 'DELETE' });
+                                        fetchDataSources();
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Add Source Quick Access */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="rounded-[40px] border-2 border-zinc-100 shadow-xl shadow-black/5 hover:border-primary/20 transition-all cursor-pointer group bg-white" onClick={() => {
+                  const url = prompt('Enter Website URL (https://...):');
+                  if(url) {
+                    fetch(`/api/chatbots/${id}/data-sources`, {
+                      method: 'POST',
+                      body: JSON.stringify({ type: 'WEBSITE', name: 'New Website', url })
+                    }).then(() => fetchDataSources());
+                  }
+                }}>
+                  <CardContent className="p-10 flex flex-col items-center text-center gap-4">
+                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                      <Globe className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-900">Add Website</h4>
+                      <p className="text-xs text-zinc-400 font-medium mt-1">Crawl pages and sitemaps</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-[40px] border-2 border-zinc-100 shadow-xl shadow-black/5 hover:border-primary/20 transition-all cursor-pointer group bg-white" onClick={() => {
+                   const text = prompt('Enter Text Content:');
+                   if(text) {
+                     fetch(`/api/chatbots/${id}/data-sources`, {
+                       method: 'POST',
+                       body: JSON.stringify({ type: 'TEXT', name: 'Manual Text', content: text })
+                     }).then(() => fetchDataSources());
+                   }
+                }}>
+                  <CardContent className="p-10 flex flex-col items-center text-center gap-4">
+                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                      <MessageSquare className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-900">Add Text</h4>
+                      <p className="text-xs text-zinc-400 font-medium mt-1">Paste raw content directly</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <Card className="rounded-[40px] border-2 border-zinc-100 bg-white p-10 overflow-hidden shadow-2xl shadow-black/5">
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-8">
+                  <Sparkles className="w-3 h-3 text-primary" />
+                  Neural Impact
+                </h3>
+                <div className="space-y-8">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs font-bold text-zinc-900">
+                      <span>Total Knowledge Weight</span>
+                      <span>{dataSources.length * 12} KB</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-zinc-950 transition-all" style={{ width: `${Math.min(dataSources.length * 20, 100)}%` }} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
+                    Connecting more high-quality data sources improves the precision and accuracy of your agent's responses.
+                  </p>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
