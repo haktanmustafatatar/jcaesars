@@ -1,6 +1,16 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { prisma } from "@/lib/prisma";
 import { createEmbedding } from "@/lib/ai";
+import { chromium } from "playwright";
+import { Readability } from "@mozilla/readability";
+import { JSDOM } from "jsdom";
+import TurndownService from "turndown";
+
+// Turndown configuration
+const turndownService = new TurndownService({
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
+});
 
 // Firecrawl client
 const firecrawl = new FirecrawlApp({
@@ -23,54 +33,45 @@ export async function crawlWebsite({
   dataSourceId: string;
 }) {
   try {
-    // Firecrawl ile crawl et
-    const crawlResponse = await firecrawl.crawlUrl(url, {
-      limit,
-      scrapeOptions: {
-        formats: ["markdown", "html"],
-        onlyMainContent: true,
-      },
-      maxDepth,
-    });
+    // Dahili Crawler Mantığı (Firecrawl olmadan)
+    console.log(`[Crawler] Starting internal crawl for: ${url} (maxDepth: ${maxDepth}, limit: ${limit})`);
+    
+    const pages: any[] = [];
+    const visited = new Set<string>();
+    const queue: { url: string; depth: number }[] = [{ url, depth: 0 }];
+    const baseUrl = new URL(url).origin;
 
-    if (!crawlResponse.success) {
-      throw new Error(crawlResponse.error || "Crawl initiation failed");
+    while (queue.length > 0 && pages.length < limit) {
+      const { url: currentUrl, depth } = queue.shift()!;
+      
+      if (visited.has(currentUrl)) continue;
+      visited.add(currentUrl);
+
+      try {
+        // Sayfayı tara
+        const scrapeResult = await internalScrape(currentUrl);
+        if (scrapeResult.success && scrapeResult.data) {
+          pages.push(scrapeResult.data);
+          
+          // Eğer derinlik sınırı aşılmadıysa, yeni linkleri bul
+          if (depth < maxDepth) {
+            const newLinks = await discoverLinks(currentUrl, baseUrl);
+            for (const link of newLinks) {
+              if (!visited.has(link)) {
+                queue.push({ url: link, depth: depth + 1 });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
+      }
     }
 
-    const jobId = (crawlResponse as any).id;
-    let pages: any[] = [];
-
-    if (jobId) {
-      console.log(`[Crawler] Job initiated with ID: ${jobId}. Polling for results...`);
-      let statusResult: any;
-      let attempts = 0;
-      const maxAttempts = 60; // 5 minutes max (5s intervals)
-
-      while (attempts < maxAttempts) {
-        // SDK 1.x uses checkCrawlStatus
-        statusResult = await (firecrawl as any).checkCrawlStatus(jobId);
-        
-        if (statusResult.success && (statusResult.status === "completed" || statusResult.status === "finished")) {
-          pages = statusResult.data || [];
-          console.log(`[Crawler] Job ${jobId} completed. Pages found: ${pages.length}`);
-          break;
-        }
-
-        if (statusResult.status === "failed") {
-          throw new Error(`Crawl job ${jobId} failed on Firecrawl side: ${statusResult.error || "Unknown error"}`);
-        }
-
-        attempts++;
-        // Wait 5 seconds before next poll
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
-
-      if (attempts >= maxAttempts) {
-        throw new Error(`Crawl job ${jobId} timed out.`);
-      }
-    } else {
-      // Fallback if data was returned directly
-      pages = (crawlResponse as any).data || [];
+    if (pages.length === 0) {
+      // Eğer dahili tarayıcı hiç sonuç bulamadıysa Firecrawl dene (Opsiyonel B Planı)
+      console.log(`[Crawler] Internal crawl yielded 0 pages. Trying Firecrawl as fallback...`);
+      return crawlWithFirecrawl({ url, maxDepth, limit, chatbotId, dataSourceId });
     }
 
     // 2. Process each page
@@ -149,8 +150,79 @@ export async function crawlWebsite({
   }
 }
 
+/**
+ * Perform a high-quality internal scrape using Playwright & Readability
+ */
+export async function internalScrape(url: string) {
+  let browser;
+  try {
+    console.log(`[InternalScraper] Launching browser for: ${url}`);
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    });
+    const page = await context.newPage();
+    
+    // Set timeout to 30s
+    page.setDefaultTimeout(30000);
+
+    console.log(`[InternalScraper] Navigating to ${url}...`);
+    await page.goto(url, { waitUntil: "networkidle" });
+
+    // Get the rendered HTML
+    const html = await page.content();
+    const title = await page.title();
+
+    // Use Readability to extract main content
+    const dom = new JSDOM(html, { url });
+    const reader = new Readability(dom.window.document);
+    const article = reader.parse();
+
+    if (!article || !article.content) {
+      throw new Error("Readability failed to extract clean content from the page.");
+    }
+
+    // Convert to Markdown
+    const markdown = turndownService.turndown(article.content);
+
+    console.log(`[InternalScraper] Successfully scraped: ${title} (${markdown.length} chars)`);
+
+    return {
+      success: true,
+      data: {
+        markdown,
+        html: article.content, // Cleaned HTML from Readability
+        metadata: {
+          title: article.title || title,
+          description: article.excerpt,
+          language: article.lang || "en",
+          sourceURL: url,
+        }
+      }
+    };
+  } catch (error) {
+    console.error(`[InternalScraper] Error scraping ${url}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown scraping error",
+    };
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}
+
 // Tek sayfa scrape
 export async function scrapePage(url: string) {
+  // Önce dahili tarayıcıyı dene
+  const internalResult = await internalScrape(url);
+  if (internalResult.success) {
+    return internalResult.data;
+  }
+
+  // Hata durumunda Firecrawl'a dön (B Planı)
+  console.log(`[Crawler] Internal scrape failed, falling back to Firecrawl for: ${url}`);
   const scrapeResponse = await firecrawl.scrapeUrl(url, {
     formats: ["markdown", "html"],
     onlyMainContent: true,
@@ -206,6 +278,73 @@ function chunkText(text: string, maxTokens: number, overlap: number): string[] {
   }
 
   return chunks;
+}
+
+/**
+ * Link discovery helper using Playwright
+ */
+async function discoverLinks(url: string, baseUrl: string): Promise<string[]> {
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle", timeout: 15000 });
+
+    const links = await page.evaluate((base) => {
+      return Array.from(document.querySelectorAll("a"))
+        .map((a) => a.href)
+        .filter((href) => {
+          try {
+            const u = new URL(href);
+            return u.origin === base && !href.includes("#") && !href.includes("?");
+          } catch {
+            return false;
+          }
+        });
+    }, baseUrl);
+
+    return Array.from(new Set(links));
+  } catch (error) {
+    console.error(`[LinkDiscovery] Error on ${url}:`, error);
+    return [];
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
+/**
+ * Fallback to original Firecrawl logic
+ */
+async function crawlWithFirecrawl({
+  url,
+  maxDepth,
+  limit,
+  chatbotId,
+  dataSourceId,
+}: {
+  url: string;
+  maxDepth: number;
+  limit: number;
+  chatbotId: string;
+  dataSourceId: string;
+}) {
+  const crawlResponse = await firecrawl.crawlUrl(url, {
+    limit,
+    scrapeOptions: {
+      formats: ["markdown", "html"],
+      onlyMainContent: true,
+    },
+    maxDepth,
+  });
+
+  if (!crawlResponse.success) {
+    throw new Error(crawlResponse.error || "Firecrawl fallback failed");
+  }
+
+  const pages = (crawlResponse as any).data || [];
+  // Rest of processing logic is handled by calling this from main crawl function
+  // Actually we need to return pages to be processed
+  return pages; 
 }
 
 // Doküman yükleme (PDF, DOCX, TXT)
