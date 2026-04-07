@@ -108,6 +108,7 @@ model Chatbot {
   model           String   @default("gpt-4o")
   temperature     Float    @default(0.7)
   maxTokens       Int      @default(1000)
+  businessContext String?  @db.Text
   systemPrompt    String   @default("You are a helpful assistant.")
   welcomeMessage  String   @default("Hi! How can I help you today?")
   
@@ -392,6 +393,7 @@ enum DataSourceType {
   TEXT
   API
   NOTION
+  QNA
 }
 
 enum DataSourceStatus {

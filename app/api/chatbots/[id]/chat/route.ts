@@ -5,11 +5,11 @@ import { createEmbedding, streamRAGResponse, logTokenUsage } from "@/lib/ai";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: chatbotId } = await params;
     const { userId: clerkId } = await auth();
-    const { id: chatbotId } = params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

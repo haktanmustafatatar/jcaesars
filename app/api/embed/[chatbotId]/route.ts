@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 // GET /api/embed/:chatbotId/config - Get chatbot configuration for embed
 export async function GET(
   req: NextRequest,
-  { params }: { params: { chatbotId: string } }
+  { params }: { params: Promise<{ chatbotId: string }> }
 ) {
   try {
+    const { chatbotId } = await params;
     const chatbot = await prisma.chatbot.findUnique({
-      where: { slug: params.chatbotId },
+      where: { slug: chatbotId },
       select: {
         id: true,
         name: true,
@@ -48,13 +49,14 @@ export async function GET(
 // POST /api/embed/:chatbotId/chat - Send a message to the chatbot
 export async function POST(
   req: NextRequest,
-  { params }: { params: { chatbotId: string } }
+  { params }: { params: Promise<{ chatbotId: string }> }
 ) {
   try {
+    const { chatbotId } = await params;
     const { message, conversationId } = await req.json();
 
     const chatbot = await prisma.chatbot.findUnique({
-      where: { slug: params.chatbotId },
+      where: { slug: chatbotId },
     });
 
     if (!chatbot || !chatbot.isPublic || chatbot.status !== "ACTIVE") {

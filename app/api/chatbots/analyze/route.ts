@@ -7,49 +7,69 @@ import { scrapePage } from "@/lib/crawler";
 import { generateSystemPrompt } from "@/lib/neural-recipes";
 
 export async function POST(req: NextRequest) {
-  try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    let url = "";
+    let useCase = "support";
 
-    const { url, useCase = "support" } = await req.json();
-    if (!url) {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
-    }
-
-    // 1. Scrape metadata using Firecrawl (or fallback fetch)
-    let metadata;
     try {
-      const result = await scrapePage(url);
-      metadata = {
-        title: result?.metadata?.title || "",
-        description: result?.metadata?.description || "",
-        logo: result?.metadata?.ogImage || result?.metadata?.favicon || "",
-        language: result?.metadata?.language || "en",
-      };
+      const { userId: clerkId } = await auth();
+      if (!clerkId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const body = await req.json();
+      url = body.url;
+      useCase = body.useCase || "support";
+
+      if (!url) {
+        return NextResponse.json({ error: "URL is required" }, { status: 400 });
+      }
+
+    // 1. Scrape content using Firecrawl
+    let scrapeResult;
+    try {
+      scrapeResult = await scrapePage(url);
     } catch (e) {
       console.warn("Rapid scrape failed, attempting basic fetch:", e);
-      // Fallback: simple fetch for meta tags if firecrawl is slow/limiting
+      // Fallback: simple fetch for metadata only
       const response = await fetch(url);
       const html = await response.text();
-      metadata = {
-        title: html.match(/<title>(.*?)<\/title>/)?.[1] || "",
-        description: html.match(/<meta name="description" content="(.*?)"/)?.[1] || "",
-        logo: html.match(/<meta property="og:image" content="(.*?)"/)?.[1] || "",
-        language: "en",
+      scrapeResult = {
+        metadata: {
+          title: html.match(/<title>(.*?)<\/title>/)?.[1] || "",
+          description: html.match(/<meta name="description" content="(.*?)"/)?.[1] || "",
+          ogImage: html.match(/<meta property="og:image" content="(.*?)"/)?.[1] || "",
+          language: "en",
+        },
+        markdown: html.slice(0, 5000), // very basic fallback
       };
     }
 
-    // 2. Generate Business Context via LLM
+    const metadata = {
+      title: scrapeResult.metadata?.title || "",
+      description: scrapeResult.metadata?.description || "",
+      logo: scrapeResult.metadata?.ogImage || scrapeResult.metadata?.favicon || "",
+      language: scrapeResult.metadata?.language || "en",
+    };
+
+    // 2. Generate Rich Business Context via LLM (Chatbase Logic)
     const { text: businessContext } = await generateText({
-      model: LLM_MODELS["gpt-4o-mini"].provider,
-      prompt: `Based on the following website information, write a professional 2-sentence summary of the business context, its purpose, and its primary products/services. 
-      Website: ${url}
-      Title: ${metadata.title}
-      Description: ${metadata.description}
+      model: LLM_MODELS["gpt-4o-mini"].provider, // Use mini for faster initial analysis
+      prompt: `Analyze the following website content carefully to create a "Business Context" for an AI agent. 
+      Write 3-4 professional and informative sentences following this exact structure:
+      1. [Company Name] is a [Industry/Type] that offers [Primary Products/Services].
+      2. Mention key value propositions or specific goals (e.g., promotional offers, fast shipping, 24/7 support).
+      3. Explain what the AI agent's role is on this specific site (navigating collections, answering queries, etc.).
       
-      Summary:`,
+      STRICT RULE: Focus ONLY on factual information found in the text. Do not invent details.
+      
+      Website URL: ${url}
+      Metadata Title: ${metadata.title}
+      Metadata Description: ${metadata.description}
+      
+      Main Content Snippet:
+      ${scrapeResult.markdown?.slice(0, 8000)}
+      
+      Business Context Summary:`,
     });
 
     // 3. Assemble the System Prompt using Neural Recipes
@@ -68,8 +88,14 @@ export async function POST(req: NextRequest) {
       businessContext: businessContext.trim(),
       systemPrompt,
     });
-  } catch (error) {
-    console.error("Analysis error:", error);
-    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Detailed Analysis error:", {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
+      url,
+      useCase
+    });
+    return NextResponse.json({ error: "Analysis failed", details: error.message, stack: error.stack }, { status: 500 });
   }
 }

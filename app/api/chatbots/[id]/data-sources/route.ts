@@ -6,11 +6,11 @@ import { addCrawlJob } from "@/lib/queue";
 // GET /api/chatbots/[id]/data-sources - List all data sources for a chatbot
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id: chatbotId } = params;
+    const { id: chatbotId } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,11 +45,11 @@ export async function GET(
 // POST /api/chatbots/[id]/data-sources - Add a new data source
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id: chatbotId } = params;
+    const { id: chatbotId } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

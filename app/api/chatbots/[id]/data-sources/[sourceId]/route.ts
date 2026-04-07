@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma";
 // DELETE /api/chatbots/[id]/data-sources/[sourceId] - Delete a data source
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; sourceId: string } }
+  { params }: { params: Promise<{ id: string; sourceId: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id: chatbotId, sourceId } = params;
+    const { id: chatbotId, sourceId } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

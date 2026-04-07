@@ -8,6 +8,7 @@ const firecrawl = new FirecrawlApp({
 });
 
 // Website crawling
+// Website crawling
 export async function crawlWebsite({
   url,
   maxDepth = 3,
@@ -33,38 +34,87 @@ export async function crawlWebsite({
     });
 
     if (!crawlResponse.success) {
-      throw new Error(crawlResponse.error || "Crawl failed");
+      throw new Error(crawlResponse.error || "Crawl initiation failed");
     }
 
-    const pages = crawlResponse.data || [];
+    const jobId = (crawlResponse as any).id;
+    let pages: any[] = [];
 
-    // Her sayfayı işle
+    if (jobId) {
+      console.log(`[Crawler] Job initiated with ID: ${jobId}. Polling for results...`);
+      let statusResult: any;
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes max (5s intervals)
+
+      while (attempts < maxAttempts) {
+        // SDK 1.x uses checkCrawlStatus
+        statusResult = await (firecrawl as any).checkCrawlStatus(jobId);
+        
+        if (statusResult.success && (statusResult.status === "completed" || statusResult.status === "finished")) {
+          pages = statusResult.data || [];
+          console.log(`[Crawler] Job ${jobId} completed. Pages found: ${pages.length}`);
+          break;
+        }
+
+        if (statusResult.status === "failed") {
+          throw new Error(`Crawl job ${jobId} failed on Firecrawl side: ${statusResult.error || "Unknown error"}`);
+        }
+
+        attempts++;
+        // Wait 5 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+
+      if (attempts >= maxAttempts) {
+        throw new Error(`Crawl job ${jobId} timed out.`);
+      }
+    } else {
+      // Fallback if data was returned directly
+      pages = (crawlResponse as any).data || [];
+    }
+
+    // 2. Process each page
+    console.log(`[Crawler] Processing ${pages.length} pages...`);
+    
     for (const page of pages) {
-      if (!page.markdown) continue;
+      if (!page.markdown && !page.html) continue;
+      const content = page.markdown || page.html;
 
       // Chunk'lara böl (512 token, 50 overlap)
-      const chunks = chunkText(page.markdown, 512, 50);
+      const chunks = chunkText(content, 512, 50);
+      console.log(`[Crawler] Page ${page.metadata?.sourceURL} split into ${chunks.length} chunks`);
 
       for (const chunk of chunks) {
         // Embedding oluştur
         const embedding = await createEmbedding(chunk);
+        const docId = `doc_${Math.random().toString(36).substring(2, 11)}`;
+        
+        const metadata = {
+          description: page.metadata?.description,
+          ogImage: page.metadata?.ogImage,
+          language: page.metadata?.language,
+          sourceURL: page.metadata?.sourceURL || url,
+          ...page.metadata
+        };
 
-        // Veritabanına kaydet
-        await prisma.document.create({
-          data: {
-            dataSourceId,
-            content: chunk,
-            url: page.metadata?.sourceURL || url,
-            title: page.metadata?.title || "Untitled",
-            metadata: {
-              description: page.metadata?.description,
-              ogImage: page.metadata?.ogImage,
-              language: page.metadata?.language,
-            },
-            // pgvector embedding
-            embedding: embedding as any,
-          },
-        });
+        // Format embedding for pgvector: [val1, val2, ...]
+        const vectorStr = `[${embedding.join(",")}]`;
+
+        // pgvector için raw SQL
+        await prisma.$executeRaw`
+          INSERT INTO "Document" ("id", "dataSourceId", "content", "url", "title", "metadata", "embedding", "createdAt", "updatedAt")
+          VALUES (
+            ${docId},
+            ${dataSourceId},
+            ${chunk},
+            ${page.metadata?.sourceURL || url},
+            ${page.metadata?.title || "Untitled"},
+            ${JSON.stringify(metadata)}::jsonb,
+            ${vectorStr}::vector,
+            NOW(),
+            NOW()
+          )
+        `;
       }
     }
 
@@ -110,7 +160,7 @@ export async function scrapePage(url: string) {
     throw new Error(scrapeResponse.error || "Scrape failed");
   }
 
-  return scrapeResponse.data;
+  return (scrapeResponse as any).data ?? scrapeResponse;
 }
 
 // Sitemap'den URL'leri çek
@@ -182,13 +232,13 @@ export async function processDocument({
       const scrapeResult = await firecrawl.scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
-      content = scrapeResult.data?.markdown || "";
+      content = ((scrapeResult as any).data as any)?.markdown || "";
     } else {
       // Diğer dosyalar - Firecrawl dene
       const scrapeResult = await firecrawl.scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
-      content = scrapeResult.data?.markdown || "";
+      content = ((scrapeResult as any).data as any)?.markdown || "";
     }
 
     if (!content.trim()) {
@@ -200,16 +250,22 @@ export async function processDocument({
 
     for (const chunk of chunks) {
       const embedding = await createEmbedding(chunk);
+      const docId = `doc_${Math.random().toString(36).substring(2, 11)}`;
+      const vectorStr = `[${embedding.join(",")}]`;
 
-      await prisma.document.create({
-        data: {
-          dataSourceId,
-          content: chunk,
-          title: "Document Upload",
-          metadata: { fileType },
-          embedding: embedding as any,
-        },
-      });
+      await prisma.$executeRaw`
+        INSERT INTO "Document" ("id", "dataSourceId", "content", "title", "metadata", "embedding", "createdAt", "updatedAt")
+        VALUES (
+          ${docId},
+          ${dataSourceId},
+          ${chunk},
+          "Document Upload",
+          ${JSON.stringify({ fileType, fileUrl })}::jsonb,
+          ${vectorStr}::vector,
+          NOW(),
+          NOW()
+        )
+      `;
     }
 
     await prisma.dataSource.update({

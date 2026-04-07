@@ -2,7 +2,8 @@ import { streamText } from "ai";
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { LLM_MODELS, searchDocuments } from "@/lib/ai";
+import { LLM_MODELS } from "@/lib/ai";
+import { searchDocuments } from "@/lib/crawler";
 import { addTokenUsageJob } from "@/lib/queue";
 
 export async function POST(req: NextRequest) {

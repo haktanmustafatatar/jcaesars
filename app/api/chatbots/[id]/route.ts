@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma";
 // GET /api/chatbots/[id] - Get chatbot details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id } = params;
+    const { id } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,11 +42,11 @@ export async function GET(
 // DELETE /api/chatbots/[id] - Delete chatbot
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id } = params;
+    const { id } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,11 +82,11 @@ export async function DELETE(
 // PATCH /api/chatbots/[id] - Update chatbot
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
-    const { id } = params;
+    const { id } = await params;
 
     if (!clerkId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

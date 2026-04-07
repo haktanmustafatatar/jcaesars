@@ -4,10 +4,10 @@ import { createEmbedding, streamRAGResponse, logTokenUsage } from "@/lib/ai";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: chatbotId } = params;
+    const { id: chatbotId } = await params;
     const { messages } = await req.json();
     
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
