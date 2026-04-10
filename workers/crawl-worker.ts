@@ -81,7 +81,8 @@ export const crawlWorker = new Worker(
   },
   {
     connection: redisConnection,
-    concurrency: 3, // Aynı anda 3 crawl işlemi
+    concurrency: 1, // Aynı anda 1 crawl işlemi (stabilite için)
+    lockDuration: 300000, // 5 dakika (Playwright için yeterli süre)
   }
 );
 

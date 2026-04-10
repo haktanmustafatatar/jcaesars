@@ -34,38 +34,91 @@ export async function crawlWebsite({
 }) {
   try {
     // Dahili Crawler Mantığı (Firecrawl olmadan)
-    console.log(`[Crawler] Starting internal crawl for: ${url} (maxDepth: ${maxDepth}, limit: ${limit})`);
+    console.log(`[Crawler] Starting optimized internal crawl for: ${url} (maxDepth: ${maxDepth}, limit: ${limit})`);
     
     const pages: any[] = [];
     const visited = new Set<string>();
     const queue: { url: string; depth: number }[] = [{ url, depth: 0 }];
     const baseUrl = new URL(url).origin;
 
-    while (queue.length > 0 && pages.length < limit) {
-      const { url: currentUrl, depth } = queue.shift()!;
-      
-      if (visited.has(currentUrl)) continue;
-      visited.add(currentUrl);
+    let browser;
+    try {
+      browser = await chromium.launch({ headless: true });
+      const context = await browser.newContext({
+        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      });
 
-      try {
-        // Sayfayı tara
-        const scrapeResult = await internalScrape(currentUrl);
-        if (scrapeResult.success && scrapeResult.data) {
-          pages.push(scrapeResult.data);
-          
-          // Eğer derinlik sınırı aşılmadıysa, yeni linkleri bul
-          if (depth < maxDepth) {
-            const newLinks = await discoverLinks(currentUrl, baseUrl);
-            for (const link of newLinks) {
-              if (!visited.has(link)) {
-                queue.push({ url: link, depth: depth + 1 });
+      while (queue.length > 0 && pages.length < limit) {
+        const { url: currentUrl, depth } = queue.shift()!;
+        
+        if (visited.has(currentUrl)) continue;
+        visited.add(currentUrl);
+
+        console.log(`[Crawler] [${pages.length + 1}/${limit}] Crawling: ${currentUrl} (depth: ${depth})`);
+
+        try {
+          // Sayfayı tara (Oturumu paylaşarak)
+          const page = await context.newPage();
+          page.setDefaultTimeout(20000); // 20s timeout per page
+
+          await page.goto(currentUrl, { waitUntil: "networkidle" });
+          const html = await page.content();
+          const pageTitle = await page.title();
+
+          // Readability & Turndown
+          const dom = new JSDOM(html, { url: currentUrl });
+          const reader = new Readability(dom.window.document);
+          const article = reader.parse();
+
+          if (article && article.content) {
+            const markdown = turndownService.turndown(article.content);
+            pages.push({
+              markdown,
+              html: article.content,
+              metadata: {
+                title: article.title || pageTitle,
+                description: article.excerpt,
+                language: article.lang || "en",
+                sourceURL: currentUrl,
+              }
+            });
+
+            // Link discovery (Eğer derinlik sınırı aşılmadıysa)
+            if (depth < maxDepth) {
+              const links = await page.evaluate((base) => {
+                return Array.from(document.querySelectorAll("a"))
+                  .map((a) => a.href)
+                  .filter((href) => {
+                    try {
+                      const u = new URL(href);
+                      // Avoid common bad links
+                      return (
+                        u.origin === base && 
+                        !href.includes("#") && 
+                        !href.includes("?") &&
+                        !href.endsWith(".jpg") &&
+                        !href.endsWith(".png") &&
+                        !href.endsWith(".pdf")
+                      );
+                    } catch { return false; }
+                  });
+              }, baseUrl);
+
+              for (const link of Array.from(new Set(links))) {
+                if (!visited.has(link)) {
+                  queue.push({ url: link, depth: depth + 1 });
+                }
               }
             }
           }
+          
+          await page.close(); // İş bittiğinde sayfayı kapat ama browser kalsın
+        } catch (err) {
+          console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
         }
-      } catch (err) {
-        console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
       }
+    } finally {
+      if (browser) await browser.close();
     }
 
     if (pages.length === 0) {
@@ -81,36 +134,40 @@ export async function crawlWebsite({
       if (!page.markdown && !page.html) continue;
       const content = page.markdown || page.html;
 
+      // Metadata hazırlama
+      const finalMetadata = {
+        description: page.metadata?.description || "",
+        ogImage: page.metadata?.ogImage || "",
+        language: page.metadata?.language || "tr",
+        sourceURL: page.metadata?.sourceURL || url,
+        ...page.metadata
+      };
+
+      const pageTitle = page.metadata?.title || "Untitled Page";
+      const pageUrl = page.metadata?.sourceURL || url;
+
       // Chunk'lara böl (512 token, 50 overlap)
       const chunks = chunkText(content, 512, 50);
-      console.log(`[Crawler] Page ${page.metadata?.sourceURL} split into ${chunks.length} chunks`);
+      console.log(`[Crawler] Page ${pageUrl} split into ${chunks.length} chunks`);
 
       for (const chunk of chunks) {
         // Embedding oluştur
         const embedding = await createEmbedding(chunk);
         const docId = `doc_${Math.random().toString(36).substring(2, 11)}`;
         
-        const metadata = {
-          description: page.metadata?.description,
-          ogImage: page.metadata?.ogImage,
-          language: page.metadata?.language,
-          sourceURL: page.metadata?.sourceURL || url,
-          ...page.metadata
-        };
-
         // Format embedding for pgvector: [val1, val2, ...]
         const vectorStr = `[${embedding.join(",")}]`;
 
-        // pgvector için raw SQL
+        // pgvector için raw SQL (URL ve Title zorunlu)
         await prisma.$executeRaw`
           INSERT INTO "Document" ("id", "dataSourceId", "content", "url", "title", "metadata", "embedding", "createdAt", "updatedAt")
           VALUES (
             ${docId},
             ${dataSourceId},
             ${chunk},
-            ${page.metadata?.sourceURL || url},
-            ${page.metadata?.title || "Untitled"},
-            ${JSON.stringify(metadata)}::jsonb,
+            ${pageUrl},
+            ${pageTitle},
+            ${JSON.stringify(finalMetadata)}::jsonb,
             ${vectorStr}::vector,
             NOW(),
             NOW()
@@ -171,31 +228,46 @@ export async function internalScrape(url: string) {
 
     // Get the rendered HTML
     const html = await page.content();
-    const title = await page.title();
+    const pageTitle = (await page.title()) || "Untitled Page";
 
     // Use Readability to extract main content
     const dom = new JSDOM(html, { url });
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
 
-    if (!article || !article.content) {
-      throw new Error("Readability failed to extract clean content from the page.");
+    let contentToConvert = "";
+    let extractedTitle = pageTitle;
+    let extractedDescription = "";
+
+    if (article && article.content && article.content.length > 100) {
+      contentToConvert = article.content;
+      extractedTitle = article.title || pageTitle;
+      extractedDescription = article.excerpt || "";
+    } else {
+      // FALLBACK: Readability başarısız olursa veya çok kısa içerik verirse
+      console.log(`[InternalScraper] Readability failed or returned short content for ${url}. Using fallback innerText.`);
+      const bodyText = await page.innerText("body");
+      contentToConvert = `<div>${bodyText.split("\n").map(line => `<p>${line}</p>`).join("")}</div>`;
     }
 
     // Convert to Markdown
-    const markdown = turndownService.turndown(article.content);
+    const markdown = turndownService.turndown(contentToConvert);
 
-    console.log(`[InternalScraper] Successfully scraped: ${title} (${markdown.length} chars)`);
+    if (markdown.length < 50) {
+      throw new Error("Extracted content is too short to be useful.");
+    }
+
+    console.log(`[InternalScraper] Successfully scraped: ${extractedTitle} (${markdown.length} chars)`);
 
     return {
       success: true,
       data: {
         markdown,
-        html: article.content, // Cleaned HTML from Readability
+        html: contentToConvert,
         metadata: {
-          title: article.title || title,
-          description: article.excerpt,
-          language: article.lang || "en",
+          title: extractedTitle,
+          description: extractedDescription,
+          language: "tr",
           sourceURL: url,
         }
       }
