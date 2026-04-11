@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { searchDocuments } from "@/lib/crawler";
+import { streamRAGResponse, LLMModel } from "@/lib/ai";
+import { addTokenUsageJob } from "@/lib/queue";
 
 // GET /api/embed/:chatbotId/config - Get chatbot configuration for embed
 export async function GET(
@@ -53,7 +56,12 @@ export async function POST(
 ) {
   try {
     const { chatbotId } = await params;
-    const { message, conversationId } = await req.json();
+    const body = await req.json();
+    const { message, conversationId } = body;
+
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
 
     const chatbot = await prisma.chatbot.findUnique({
       where: { slug: chatbotId },
@@ -92,25 +100,93 @@ export async function POST(
       },
     });
 
-    // TODO: Call AI service to generate response
-    // For now, return a mock response
-    const response =
-      "Thanks for your message! This is a demo response. In production, this would be powered by your trained AI model.";
+    // Önceki mesajları al (son 10)
+    const previousMessages = await prisma.message.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: "asc" },
+      take: 10,
+    });
 
-    // Save assistant message
-    const assistantMessage = await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: "ASSISTANT",
-        content: response,
-        model: chatbot.model,
+    // RAG: İlgili dokümanları ara
+    const relevantDocs = await searchDocuments({
+      query: message,
+      chatbotId: chatbot.id,
+      limit: 5,
+    });
+
+    // Context oluştur
+    const context = relevantDocs.length > 0
+      ? relevantDocs
+          .map((doc) => `Source: ${doc.title || doc.url || "Unknown"}\nContent: ${doc.content}`)
+          .join("\n\n---\n\n")
+      : "No specific context found for this query in the knowledge base.";
+
+    // Mesajları formatla
+    const messages = previousMessages.map((m) => ({
+      role: m.role.toLowerCase() as "user" | "assistant" | "system",
+      content: m.content,
+    }));
+
+    // Gelişmiş System Prompt
+    const baseSystemPrompt = chatbot.systemPrompt || "You are a helpful assistant.";
+    const businessContext = chatbot.businessContext ? `\nBusiness Context:\n${chatbot.businessContext}` : "";
+    
+    const enhancedSystemPrompt = `${baseSystemPrompt}${businessContext}
+
+You are an AI assistant for ${chatbot.name}. 
+Please follow these instructions strictly:
+1. Use the provided context to answer the user's question directly.
+2. If the context does not contain enough information to answer definitively, rely ONLY on the provided business context or state honestly that you do not have that specific information. Avoid hallucination.
+3. Be professional, helpful, and concise.
+4. Maintain a natural, conversational tone.`;
+
+    // Stream AI response
+    const result = await streamRAGResponse({
+      messages,
+      model: chatbot.model as LLMModel,
+      systemPrompt: enhancedSystemPrompt,
+      context,
+      temperature: chatbot.temperature || 0.7,
+      maxTokens: chatbot.maxTokens || 1000,
+      onFinish: async (completion) => {
+        const promptTokens = completion.usage?.promptTokens || 0;
+        const completionTokens = completion.usage?.completionTokens || 0;
+
+        // Asistan mesajını kaydet
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            role: "ASSISTANT",
+            content: completion.text,
+            model: chatbot.model,
+            promptTokens,
+            completionTokens,
+            sources: relevantDocs.map((d) => ({
+              title: d.title,
+              url: d.url,
+              similarity: d.similarity,
+            })),
+          },
+        });
+
+        // Token usage tracking
+        if (chatbot.userId) {
+          await addTokenUsageJob({
+            type: "log-usage",
+            userId: chatbot.userId,
+            chatbotId: chatbot.id,
+            conversationId: conversation.id,
+            model: chatbot.model,
+            promptTokens,
+            completionTokens,
+          });
+        }
       },
     });
 
-    return NextResponse.json({
-      message: assistantMessage,
-      conversationId: conversation.id,
-    });
+    const response = result.toDataStreamResponse();
+    response.headers.set("X-Conversation-Id", conversation.id);
+    return response;
   } catch (error) {
     console.error("Error processing chat:", error);
     return NextResponse.json(

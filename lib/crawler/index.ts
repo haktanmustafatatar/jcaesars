@@ -176,15 +176,22 @@ export async function crawlWebsite({
       }
     }
 
+    // Calculate total size
+    const totalSize = pages.reduce((acc, p) => acc + (p.markdown?.length || 0), 0);
+
     // Data source'u güncelle
     await prisma.dataSource.update({
       where: { id: dataSourceId },
       data: {
         status: "COMPLETED",
         pagesCount: pages.length,
+        fileSize: totalSize, // Store actual size in bytes (approx characters)
         lastCrawledAt: new Date(),
       },
     });
+
+    // Check if all sources for this chatbot are completed
+    await updateChatbotStatus(chatbotId);
 
     return {
       success: true,
@@ -332,24 +339,86 @@ export async function getSitemapUrls(url: string): Promise<string[]> {
   }
 }
 
-// Text chunk'larına böl
+// Text chunk'larına böl (Recursive Character Splitting)
 function chunkText(text: string, maxTokens: number, overlap: number): string[] {
-  // Basit chunking: karakter bazlı (token ~= karakter/4)
   const maxChars = maxTokens * 4;
   const overlapChars = overlap * 4;
-
+  
   const chunks: string[] = [];
-  let start = 0;
-
-  while (start < text.length) {
-    const end = Math.min(start + maxChars, text.length);
-    chunks.push(text.slice(start, end));
-    start = end - overlapChars;
-
-    if (start >= end) break;
+  const separators = ["\n\n", "\n", ". ", " ", ""];
+  
+  function split(content: string, depth: number): string[] {
+    if (content.length <= maxChars) return [content];
+    
+    const separator = separators[depth] ?? "";
+    const parts = content.split(separator);
+    const result: string[] = [];
+    let currentChunk = "";
+    
+    for (const part of parts) {
+      if ((currentChunk + separator + part).length <= maxChars) {
+        currentChunk += (currentChunk ? separator : "") + part;
+      } else {
+        if (currentChunk) result.push(currentChunk);
+        
+        if (part.length > maxChars) {
+          // If a single part is too long, go deeper or hard split
+          if (depth < separators.length - 1) {
+            result.push(...split(part, depth + 1));
+          } else {
+            result.push(part.slice(0, maxChars));
+          }
+        } else {
+          currentChunk = part;
+        }
+      }
+    }
+    
+    if (currentChunk) result.push(currentChunk);
+    
+    // Process overlaps
+    const overlappedResults: string[] = [];
+    for (let i = 0; i < result.length; i++) {
+        let chunk = result[i];
+        if (i > 0 && overlapChars > 0) {
+            const prev = result[i-1];
+            const overlapPart = prev.slice(-overlapChars);
+            chunk = overlapPart + chunk;
+        }
+        overlappedResults.push(chunk);
+    }
+    
+    return overlappedResults;
   }
 
-  return chunks;
+  return split(text, 0);
+}
+
+/**
+ * Update Chatbot status based on its data sources
+ */
+export async function updateChatbotStatus(chatbotId: string) {
+  const chatbot = await prisma.chatbot.findUnique({
+    where: { id: chatbotId },
+    include: { dataSources: true }
+  });
+
+  if (!chatbot) return;
+
+  const allCompleted = chatbot.dataSources.every(ds => ds.status === "COMPLETED");
+  const anyError = chatbot.dataSources.some(ds => ds.status === "ERROR");
+
+  let newStatus = chatbot.status;
+  if (allCompleted) newStatus = "ACTIVE";
+  else if (anyError) newStatus = "ERROR";
+  else if (chatbot.dataSources.length > 0) newStatus = "TRAINING";
+
+  if (newStatus !== chatbot.status) {
+    await prisma.chatbot.update({
+      where: { id: chatbotId },
+      data: { status: newStatus }
+    });
+  }
 }
 
 /**
@@ -484,9 +553,12 @@ export async function processDocument({
       data: {
         status: "COMPLETED",
         pagesCount: 1,
+        fileSize: content.length,
         lastCrawledAt: new Date(),
       },
     });
+
+    await updateChatbotStatus(chatbotId);
 
     return { success: true, chunks: chunks.length };
   } catch (error) {

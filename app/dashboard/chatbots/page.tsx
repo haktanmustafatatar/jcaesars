@@ -173,7 +173,7 @@ export default function ChatbotsPage() {
                           }`}
                           variant="outline"
                         >
-                          {chatbot.status}
+                          {chatbot.status === "ACTIVE" ? "READY" : chatbot.status}
                         </Badge>
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                           {chatbot.model}
@@ -201,9 +201,9 @@ export default function ChatbotsPage() {
                     <div className="bg-zinc-50/50 rounded-2xl p-4 transition-colors group-hover:bg-white/80">
                       <div className="flex items-center gap-2 mb-1">
                         <BarChart3 className="w-3 h-3 text-zinc-400" />
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</span>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">System</span>
                       </div>
-                      <span className="text-xs font-bold text-zinc-900">
+                      <span className={`text-xs font-bold ${chatbot.status === "ACTIVE" ? "text-green-600" : "text-amber-600"}`}>
                         {chatbot.status === "ACTIVE" ? "Operational" : "Synchronizing"}
                       </span>
                     </div>

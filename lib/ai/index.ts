@@ -80,6 +80,7 @@ export async function streamRAGResponse({
   context,
   temperature = 0.7,
   maxTokens = 1000,
+  onFinish,
 }: {
   messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
   model: LLMModel;
@@ -87,14 +88,18 @@ export async function streamRAGResponse({
   context: string;
   temperature?: number;
   maxTokens?: number;
+  onFinish?: (completion: { text: string; usage: any }) => Promise<void> | void;
 }) {
   const selectedModel = LLM_MODELS[model]?.provider || LLM_MODELS["gpt-4o"].provider;
 
   const enhancedSystemPrompt = `${systemPrompt}
 
-Use the following context to answer the user's question. If the context doesn't contain relevant information, say so honestly.
+IMPORTANT: Use the following context to answer the user's question accurately. 
+Pay special attention to numerical values, prices, dates, and specific product details. 
+If the context contains a price for a product the user is asking about, YOU MUST include it.
+If the context doesn't contain the requested information, say so honestly, but try to provide a close alternative if possible.
 
-Context:
+Knowledge Hub Context:
 ${context}`;
 
   return streamText({
@@ -105,6 +110,7 @@ ${context}`;
     ],
     temperature,
     maxTokens,
+    onFinish,
   });
 }
 

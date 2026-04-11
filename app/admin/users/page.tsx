@@ -1,248 +1,254 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   Search,
   MoreHorizontal,
   Mail,
   Crown,
-  User,
+  User as UserIcon,
   Ban,
+  Shield,
+  MessageSquare,
+  Bot,
+  Filter,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const users = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john@example.com",
-    plan: "Professional",
-    status: "active",
-    chatbots: 5,
-    messages: 12483,
-    joined: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah@company.com",
-    plan: "Enterprise",
-    status: "active",
-    chatbots: 12,
-    messages: 45291,
-    joined: "2024-02-01",
-  },
-  {
-    id: "3",
-    name: "Mike Chen",
-    email: "mike@tech.io",
-    plan: "Starter",
-    status: "active",
-    chatbots: 1,
-    messages: 892,
-    joined: "2024-03-10",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily@startup.com",
-    plan: "Professional",
-    status: "suspended",
-    chatbots: 3,
-    messages: 5621,
-    joined: "2024-01-28",
-  },
-  {
-    id: "5",
-    name: "Alex Wilson",
-    email: "alex@agency.co",
-    plan: "Enterprise",
-    status: "active",
-    chatbots: 8,
-    messages: 28934,
-    joined: "2024-02-20",
-  },
-];
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [planFilter, setPlanFilter] = useState("all");
+  const [filterRole, setFilterRole] = useState("ALL");
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/users");
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      toast.error("Failed to synchronize user records");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+      if (res.ok) {
+        toast.success(`User elevated to ${newRole}`);
+        fetchUsers();
+      }
+    } catch (error) {
+      toast.error("Failed to update security clearance");
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlan =
-      planFilter === "all" || user.plan.toLowerCase() === planFilter;
-    return matchesSearch && matchesPlan;
+    const matchesRole = filterRole === "ALL" || user.role === filterRole;
+    return matchesSearch && matchesRole;
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Kimlik Kasasına Erişiliyor...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 animate-in fade-in duration-700">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Users
-          </h1>
-          <p className="text-zinc-400">
-            Manage user accounts and subscriptions
-          </p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">Kimlik Yönetimi</h1>
+          <p className="text-zinc-500 font-medium">Platform genelindeki kullanıcı erişimlerini ve abonelik kademelerini yönetin.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 rounded-lg">
-            <Users className="w-4 h-4 text-zinc-400" />
-            <span className="text-sm text-white">{users.length} total</span>
-          </div>
+        <div className="flex items-center gap-3">
+           <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-white">{users.length}</span>
+              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Toplam Varlık</span>
+           </div>
+           <Button onClick={fetchUsers} variant="outline" className="rounded-2xl h-11 border-white/5 hover:bg-white/5">
+              <RefreshCw className="w-4 h-4" />
+           </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
+      {/* Control Bar */}
+      <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <Input
-            placeholder="Search users..."
+            placeholder="İsim, e-posta veya sinirsel ID ile ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-zinc-900 border-white/10 text-white placeholder:text-zinc-500"
+            className="h-14 pl-12 bg-zinc-900/50 border-white/5 text-white rounded-[20px] focus:ring-primary/20 transition-all font-medium"
           />
         </div>
-        <Select value={planFilter} onValueChange={setPlanFilter}>
-          <SelectTrigger className="w-[180px] bg-zinc-900 border-white/10 text-white">
-            <SelectValue placeholder="Filter by plan" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-white/10">
-            <SelectItem value="all">All Plans</SelectItem>
-            <SelectItem value="starter">Starter</SelectItem>
-            <SelectItem value="professional">Professional</SelectItem>
-            <SelectItem value="enterprise">Enterprise</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+           {["HEPSİ", "USER", "ADMIN"].map(role => (
+              <Button 
+                key={role}
+                onClick={() => setFilterRole(role === "HEPSİ" ? "ALL" : role)}
+                variant={(role === "HEPSİ" ? "ALL" : role) === filterRole ? "default" : "ghost"}
+                className={cn(
+                  "h-11 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all",
+                  (role === "HEPSİ" ? "ALL" : role) === filterRole ? "bg-primary text-white" : "text-zinc-500 hover:bg-white/5"
+                )}
+              >
+                {role}
+              </Button>
+           ))}
+        </div>
       </div>
 
-      {/* Users List */}
-      <div className="space-y-4">
-        {filteredUsers.map((user, index) => (
-          <motion.div
-            key={user.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <Card className="bg-zinc-900 border-white/10 hover:border-white/20 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-primary/20 text-primary text-lg">
-                        {user.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-white">{user.name}</h3>
-                        <Badge
-                          variant={
-                            user.status === "active" ? "default" : "destructive"
-                          }
-                          className="text-xs"
-                        >
-                          {user.status}
+      {/* Users DataTable */}
+      <Card className="rounded-[40px] bg-zinc-900/40 border-white/5 overflow-hidden shadow-2xl">
+         <Table>
+            <TableHeader className="bg-zinc-950/50">
+               <TableRow className="border-white/5 hover:bg-transparent px-6">
+                  <TableHead className="w-[300px] text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16 pl-10">Varlık</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Yetkİ Seviyesi</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16 text-center">Neural Düğümler</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Durum</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Katılım</TableHead>
+                  <TableHead className="text-right h-16 pr-10"></TableHead>
+               </TableRow>
+            </TableHeader>
+            <TableBody>
+               {filteredUsers.map((user) => (
+                  <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+                     <TableCell className="pl-10 py-6">
+                        <div className="flex items-center gap-4">
+                           <Avatar className="w-11 h-11 rounded-2xl border border-white/10">
+                              <AvatarImage src={user.avatar} />
+                              <AvatarFallback className="bg-zinc-800 text-zinc-400 font-bold">
+                                 {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                           </Avatar>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-white text-sm">{user.name || "Anonim Varlık"}</span>
+                              <span className="text-[11px] text-zinc-500 font-medium">{user.email}</span>
+                           </div>
+                        </div>
+                     </TableCell>
+                     <TableCell>
+                        <Badge className={`rounded-xl px-3 py-1 text-[10px] font-black tracking-widest ${
+                           user.role === 'ADMIN' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                        }`}>
+                           {user.role}
                         </Badge>
-                      </div>
-                      <p className="text-sm text-zinc-500">{user.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="hidden md:flex items-center gap-8">
-                    <div className="text-center">
-                      <p className="text-lg font-semibold text-white">
-                        {user.chatbots}
-                      </p>
-                      <p className="text-xs text-zinc-500">Chatbots</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-semibold text-white">
-                        {user.messages.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-zinc-500">Messages</p>
-                    </div>
-                    <div className="text-center">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${
-                          user.plan === "Enterprise"
-                            ? "border-yellow-500 text-yellow-500"
-                            : user.plan === "Professional"
-                              ? "border-primary text-primary"
-                              : "border-zinc-500 text-zinc-500"
-                        }`}
-                      >
-                        {user.plan}
-                      </Badge>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {new Date(user.joined).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-zinc-400">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-zinc-900 border-white/10"
-                    >
-                      <DropdownMenuItem className="text-white">
-                        <User className="w-4 h-4 mr-2" />
-                        View Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-white">
-                        <Mail className="w-4 h-4 mr-2" />
-                        Send Email
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-white">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Change Plan
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-500">
-                        <Ban className="w-4 h-4 mr-2" />
-                        Suspend
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                     </TableCell>
+                     <TableCell className="text-center">
+                        <div className="flex flex-col items-center">
+                           <span className="font-black text-white">{user.chatbots?.length || 0}</span>
+                           <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Düğüm Aktİf</span>
+                        </div>
+                     </TableCell>
+                     <TableCell>
+                         <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                            <span className="text-xs font-bold text-zinc-300">AKTİF</span>
+                         </div>
+                     </TableCell>
+                     <TableCell>
+                        <div className="space-y-1">
+                           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Başlangıç</p>
+                           <p className="text-xs text-white font-medium">{format(new Date(user.createdAt), 'dd MMM yyyy')}</p>
+                        </div>
+                     </TableCell>
+                     <TableCell className="text-right pr-10">
+                        <DropdownMenu>
+                           <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-white/5 text-zinc-500">
+                                 <MoreHorizontal className="w-5 h-5" />
+                              </Button>
+                           </DropdownMenuTrigger>
+                           <DropdownMenuContent align="end" className="w-56 rounded-3xl bg-zinc-950 border-white/10 p-2 shadow-3xl">
+                              <DropdownMenuLabel className="px-4 py-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest">Varlık Kontrolleri</DropdownMenuLabel>
+                              <DropdownMenuSeparator className="bg-white/5" />
+                              <DropdownMenuItem className="rounded-2xl px-4 py-3 text-sm font-bold text-white hover:bg-white/5 cursor-pointer">
+                                 <UserIcon className="w-4 h-4 mr-3 text-primary" /> Profil Detayları
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="rounded-2xl px-4 py-3 text-sm font-bold text-white hover:bg-white/5 cursor-pointer">
+                                 <Mail className="w-4 h-4 mr-3 text-blue-400" /> Protokol Gönder
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/5" />
+                              <DropdownMenuItem 
+                                 onClick={() => handleUpdateRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')}
+                                 className="rounded-2xl px-4 py-3 text-sm font-bold text-amber-500 hover:bg-amber-500/10 cursor-pointer"
+                              >
+                                 <Shield className="w-4 h-4 mr-3" /> Yetki Değiştir
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="rounded-2xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 cursor-pointer">
+                                 <Ban className="w-4 h-4 mr-3" /> Erişimi Geri Çek
+                              </DropdownMenuItem>
+                           </DropdownMenuContent>
+                        </DropdownMenu>
+                     </TableCell>
+                  </TableRow>
+               ))}
+            </TableBody>
+         </Table>
+         
+         {filteredUsers.length === 0 && (
+            <div className="py-20 text-center flex flex-col items-center gap-4">
+               <Users className="w-12 h-12 text-zinc-800" />
+               <p className="text-zinc-600 font-black uppercase tracking-widest text-xs">Ağda eşleşen bir varlık bulunamadı.</p>
+            </div>
+         )}
+      </Card>
     </div>
   );
+}
+
+function cn(...classes: any[]) {
+  return classes.filter(Boolean).join(" ");
 }

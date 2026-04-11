@@ -1,0 +1,15 @@
+Creating test user and chatbot...
+Created Chatbot Slug: test-bot-1775844041079
+Sending POST to absolute local URL...
+Conversation ID: cmnt7ovut0001sb01jrcfyfps
+Stream output preview: f:{"messageId":"msg-Ae6g3ni9Lsu4RuK6NJ5Y7SAT"}0:"I'm"0:" sorry"0:","0:" but"0:" I"0:" don't"0...
+
+Validating DB records...
+User Messages Found: 1
+Assistant Message Found: true
+- Role: ASSISTANT
+- Prompt tokens: 146
+- Completion tokens: 31
+- Parsed Sources exist: true
+
+Done.

@@ -15,8 +15,11 @@ import {
   Lock,
   MessageSquare,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Image as ImageIcon,
+  Type
 } from "lucide-react";
+import { SourceDialog } from "@/components/dashboard/source-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +57,8 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState<any>({});
   const [dataSources, setDataSources] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
+  const [sourceDialogType, setSourceDialogType] = useState<"WEBSITE" | "TEXT" | null>(null);
 
   useEffect(() => {
     fetchChatbot();
@@ -367,36 +372,70 @@ export default function SettingsPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Primary Brand Color</Label>
-                  <div className="flex items-center gap-4">
-                    <div 
-                      className="w-14 h-14 rounded-2xl shadow-xl ring-4 ring-white border border-zinc-100" 
-                      style={{ backgroundColor: formData.primaryColor }} 
-                    />
-                    <Input 
-                      value={formData.primaryColor ?? ""} 
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFormData((prev: any) => ({ ...prev, primaryColor: val }));
-                      }}
-                      className="h-14 flex-1 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-mono"
-                      placeholder={chatbot?.primaryColor || "#e25b31"}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Primary Brand Color</Label>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-14 h-14 rounded-2xl shadow-xl ring-4 ring-white border border-zinc-100" 
+                        style={{ backgroundColor: formData.primaryColor }} 
+                      />
+                      <Input 
+                        value={formData.primaryColor ?? ""} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((prev: any) => ({ ...prev, primaryColor: val }));
+                        }}
+                        className="h-14 flex-1 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-mono"
+                        placeholder={chatbot?.primaryColor || "#e25b31"}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Agent Avatar URL</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center overflow-hidden">
+                        {formData.avatar ? <img src={formData.avatar} className="w-full h-full object-cover" /> : <Bot className="w-6 h-6 text-zinc-400" />}
+                      </div>
+                      <Input 
+                        value={formData.avatar ?? ""} 
+                        onChange={(e) => setFormData({...formData, avatar: e.target.value})}
+                        className="h-14 flex-1 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium"
+                        placeholder="https://..."
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Integration Message</Label>
-                  <Input 
-                    value={formData.welcomeMessage ?? ""} 
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData((prev: any) => ({ ...prev, welcomeMessage: val }));
-                    }}
-                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium"
-                    placeholder={chatbot?.welcomeMessage || "e.g., Hi! How can we assist you today?"}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Integration Message</Label>
+                    <Input 
+                      value={formData.welcomeMessage ?? ""} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev: any) => ({ ...prev, welcomeMessage: val }));
+                      }}
+                      className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium"
+                      placeholder={chatbot?.welcomeMessage || "e.g., Hi! How can we assist you today?"}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest pl-1">Widget Position</Label>
+                    <Select value={formData.position} onValueChange={(v) => setFormData({ ...formData, position: v })}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all font-medium">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-zinc-200">
+                        <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                        <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                        <SelectItem value="top-right">Top Right (Experimental)</SelectItem>
+                        <SelectItem value="top-left">Top Left (Experimental)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="pt-4 flex items-center justify-between p-6 rounded-3xl bg-zinc-50">
@@ -417,10 +456,14 @@ export default function SettingsPage() {
                   <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(226,91,49,0.2),transparent)] opacity-50" />
                   <div className="relative z-10 w-full space-y-8 flex flex-col items-center">
                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">Neural Preview</p>
-                    <div className="w-80 h-96 bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col">
+                    <div className="w-80 h-96 bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
                       <div className="p-6 text-white flex items-center justify-between" style={{ backgroundColor: formData.primaryColor }}>
                          <div className="flex items-center gap-3">
-                            <Bot className="w-5 h-5" />
+                            {formData.avatar ? (
+                              <img src={formData.avatar} className="w-6 h-6 rounded-full object-cover" />
+                            ) : (
+                              <Bot className="w-5 h-5" />
+                            )}
                             <span className="font-bold text-xs">{formData.name || "Agent"}</span>
                          </div>
                          <div className="w-2 h-2 rounded-full bg-white animate-ping" />
@@ -432,7 +475,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="p-4 border-t border-zinc-100 flex items-center gap-3">
                          <div className="w-full h-10 bg-zinc-50 rounded-xl" />
-                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: formData.primaryColor }}>
+                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg" style={{ backgroundColor: formData.primaryColor }}>
                             <Save className="w-4 h-4" />
                          </div>
                       </div>
@@ -500,13 +543,20 @@ export default function SettingsPage() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <Badge className={`rounded-full px-3 py-0.5 text-[9px] font-black tracking-tighter uppercase ${
-                                    source.status === 'COMPLETED' ? 'bg-green-50 text-green-600 border-green-200' : 
-                                    source.status === 'PENDING' || source.status === 'CRAWLING' ? 'bg-blue-50 text-blue-600 border-blue-200 animate-pulse' :
-                                    'bg-red-50 text-red-600 border-red-200'
-                                  }`}>
-                                    {source.status}
-                                  </Badge>
+                                  <div className="flex flex-col gap-1">
+                                    <Badge className={`rounded-full px-3 py-0.5 text-[9px] font-black tracking-tighter uppercase w-fit ${
+                                      source.status === 'COMPLETED' ? 'bg-green-50 text-green-600 border-green-200' : 
+                                      source.status === 'PENDING' || source.status === 'CRAWLING' ? 'bg-blue-50 text-blue-600 border-blue-200 animate-pulse' :
+                                      'bg-red-50 text-red-600 border-red-200'
+                                    }`}>
+                                      {source.status}
+                                    </Badge>
+                                    {source.status === 'ERROR' && (
+                                      <span className="text-[9px] text-red-400 font-medium max-w-[120px] truncate" title={source.crawlStatus}>
+                                        {source.crawlStatus || 'Unknown Error'}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                   <Button 
@@ -536,16 +586,11 @@ export default function SettingsPage() {
               {/* Add Source Quick Access */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="rounded-[40px] border-2 border-zinc-100 shadow-xl shadow-black/5 hover:border-primary/20 transition-all cursor-pointer group bg-white" onClick={() => {
-                  const url = prompt('Enter Website URL (https://...):');
-                  if(url) {
-                    fetch(`/api/chatbots/${id}/data-sources`, {
-                      method: 'POST',
-                      body: JSON.stringify({ type: 'WEBSITE', name: 'New Website', url })
-                    }).then(() => fetchDataSources());
-                  }
+                  setSourceDialogType("WEBSITE");
+                  setSourceDialogOpen(true);
                 }}>
                   <CardContent className="p-10 flex flex-col items-center text-center gap-4">
-                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
                       <Globe className="w-7 h-7" />
                     </div>
                     <div>
@@ -556,16 +601,11 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card className="rounded-[40px] border-2 border-zinc-100 shadow-xl shadow-black/5 hover:border-primary/20 transition-all cursor-pointer group bg-white" onClick={() => {
-                   const text = prompt('Enter Text Content:');
-                   if(text) {
-                     fetch(`/api/chatbots/${id}/data-sources`, {
-                       method: 'POST',
-                       body: JSON.stringify({ type: 'TEXT', name: 'Manual Text', content: text })
-                     }).then(() => fetchDataSources());
-                   }
+                  setSourceDialogType("TEXT");
+                  setSourceDialogOpen(true);
                 }}>
                   <CardContent className="p-10 flex flex-col items-center text-center gap-4">
-                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                    <div className="w-14 h-14 rounded-[24px] bg-zinc-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
                       <MessageSquare className="w-7 h-7" />
                     </div>
                     <div>
@@ -575,6 +615,14 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              <SourceDialog 
+                open={sourceDialogOpen}
+                onOpenChange={setSourceDialogOpen}
+                type={sourceDialogType}
+                chatbotId={id}
+                onSuccess={() => fetchDataSources()}
+              />
             </div>
 
             <div className="space-y-8">
@@ -587,10 +635,13 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-xs font-bold text-zinc-900">
                       <span>Total Knowledge Weight</span>
-                      <span>{dataSources.length * 12} KB</span>
+                      <span>{(dataSources.reduce((acc, ds) => acc + (ds.fileSize || 0), 0) / 1024).toFixed(1)} KB</span>
                     </div>
                     <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-zinc-950 transition-all" style={{ width: `${Math.min(dataSources.length * 20, 100)}%` }} />
+                      <div 
+                        className="h-full bg-zinc-950 transition-all duration-1000" 
+                        style={{ width: `${Math.min((dataSources.reduce((acc, ds) => acc + (ds.fileSize || 0), 0) / 1024) * 0.5, 100)}%` }} 
+                      />
                     </div>
                   </div>
                   <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
