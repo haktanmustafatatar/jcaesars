@@ -2,35 +2,39 @@
 
 import Link from "next/link";
 import { Twitter, Linkedin, Github, Zap, ShieldCheck, Cpu } from "lucide-react";
-
-const footerLinks = {
-  Intelligence: [
-    { label: "Elite Features", href: "#features" },
-    { label: "Pricing Models", href: "#pricing" },
-    { label: "API Reference", href: "/docs" },
-    { label: "Integrations", href: "/integrations" },
-  ],
-  Architecture: [
-    { label: "About Strategy", href: "/about" },
-    { label: "Knowledge Base", href: "/blog" },
-    { label: "Careers", href: "/careers" },
-    { label: "Strategy Desk", href: "/contact" },
-  ],
-  Security: [
-    { label: "Privacy Protocol", href: "/privacy" },
-    { label: "Terms of Autonomy", href: "/terms" },
-    { label: "Safe Haven", href: "/security" },
-    { label: "Enterprise SLA", href: "/sla" },
-  ],
-};
-
-const socialLinks = [
-  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-  { icon: Github, href: "https://github.com", label: "GitHub" },
-];
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 
 export function Footer() {
+  const t = useTranslations("Landing.Footer");
+
+  const footerLinks = useMemo(() => ({
+    [t("categories.Intelligence")]: [
+      { label: "Elite Features", href: "#features" },
+      { label: "Pricing Models", href: "#pricing" },
+      { label: "API Reference", href: "/docs" },
+      { label: "Integrations", href: "/integrations" },
+    ],
+    [t("categories.Architecture")]: [
+      { label: "About Strategy", href: "/about" },
+      { label: "Knowledge Base", href: "/blog" },
+      { label: "Careers", href: "/careers" },
+      { label: "Strategy Desk", href: "/contact" },
+    ],
+    [t("categories.Security")]: [
+      { label: t("links.privacy"), href: "/privacy" },
+      { label: t("links.terms"), href: "/terms" },
+      { label: "Safe Haven", href: "/security" },
+      { label: t("links.sla"), href: "/sla" },
+    ],
+  }), [t]);
+
+  const socialLinks = [
+    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+    { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+    { icon: Github, href: "https://github.com", label: "GitHub" },
+  ];
+
   return (
     <footer className="bg-white border-t border-black/[0.03] pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +49,7 @@ export function Footer() {
               <span className="text-2xl font-black tracking-tighter text-zinc-900 uppercase">J.CAESAR</span>
             </Link>
             <p className="text-zinc-500 font-medium text-sm leading-relaxed max-w-xs">
-              Pioneering high-fidelity AI agents for the next era of business autonomy. Train, deploy, and scale with absolute precision.
+              {t("description")}
             </p>
             <div className="flex gap-4">
               {socialLinks.map((social) => (
@@ -84,15 +88,15 @@ export function Footer() {
 
           {/* Status / Compliance */}
           <div className="space-y-6">
-             <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">System Status</h3>
+             <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{t("categories.SystemStatus")}</h3>
              <div className="space-y-4">
                 <div className="flex items-center gap-2 group cursor-default">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                   <span className="text-xs font-black text-zinc-800 uppercase tracking-tighter">Systems Operational</span>
+                   <span className="text-xs font-black text-zinc-800 uppercase tracking-tighter">{t("status")}</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-zinc-50 border border-black/[0.03] space-y-2">
                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                   <p className="text-[10px] font-bold text-zinc-500 leading-tight">ISO/IEC 27001 Certified Security Protocol</p>
+                   <p className="text-[10px] font-bold text-zinc-500 leading-tight">{t("securityNote")}</p>
                 </div>
              </div>
           </div>
@@ -102,7 +106,7 @@ export function Footer() {
         <div className="mt-24 pt-8 border-t border-black/[0.03] flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-6">
              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-               © {new Date().getFullYear()} J.CAESAR AUTONOMY.
+               {t("copyright", { year: new Date().getFullYear() })}
              </p>
              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-50 border border-black/[0.03] text-[9px] font-black text-zinc-400 uppercase tracking-tighter">
                 <Cpu className="w-3 h-3" />
@@ -114,19 +118,19 @@ export function Footer() {
               href="/privacy"
               className="text-[10px] font-black text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors"
             >
-              Privacy
+              {t("links.privacy")}
             </Link>
             <Link
               href="/terms"
               className="text-[10px] font-black text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors"
             >
-              Terms
+              {t("links.terms")}
             </Link>
             <Link
               href="/sla"
               className="text-[10px] font-black text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors"
             >
-              Architecture SLA
+              {t("links.sla")}
             </Link>
           </div>
         </div>

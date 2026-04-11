@@ -1,0 +1,306 @@
+{
+  "Common": {
+    "getStarted": "Get Started",
+    "login": "Login",
+    "signup": "Sign Up",
+    "demo": "Watch Demo",
+    "earlyAccess": "Get Early Access"
+  },
+  "Hero": {
+    "badge": "Next Generation AI Agents",
+    "title1": "Build",
+    "titleElite": "Elite",
+    "title2": "AI Intelligence.",
+    "description": "Train bespoke AI agents on your data in seconds. Deploy a high-fidelity command center that handles sales, support, and growth—autonomously.",
+    "trusted": "Trusted by 500+ Innovators",
+    "scaling": "Scaling 10M+ Conversations Monthly",
+    "performance": "Performance",
+    "intelligence": "Intelligence",
+    "resolutions": "Resolutions",
+    "activeAgents": "Active Agents",
+    "growthRate": "Growth Rate",
+    "mockChatQ": "How can I scale my customer support?",
+    "mockChatA": "JCaesar Agents handle 90% of queries automatically."
+  },
+  "Features": {
+    "badge": "Core Intelligence",
+    "title1": "Capabilities that Redefine",
+    "titleAI": "AI Autonomy.",
+    "title2": "",
+    "description": "Every feature is engineered for speed, accuracy, and absolute brand alignment.",
+    "explore": "Explore Feature",
+    "f1Title": "Train on Any Website",
+    "f1Desc": "Automatically crawl and extract intelligence from any digital footprint. Our AI understands deep context.",
+    "f2Title": "Infinite Knowledge",
+    "f2Desc": "Seamless processing for PDFs, Docs, and structured data. Your specialized knowledge base, refined.",
+    "f3Title": "Bespoke Personality",
+    "f3Desc": "Define your agent's soul. Match your brand's voice with absolute precision and elegance.",
+    "f4Title": "Elite Deployment",
+    "f4Desc": "One snippet. Infinite reach. Deploy across platforms with a high-fidelity interface.",
+    "f5Title": "Pro Analytics",
+    "f5Desc": "Deep intelligence dashboard to monitor behavior, sentiment, and conversion metrics.",
+    "f6Title": "Developer First",
+    "f6Desc": "Full API capabilities for architectural integration. Built for those who demand flexibility."
+  },
+  "Dashboard": {
+    "sidebar": {
+      "newChatbot": "New Chatbot",
+      "dashboard": "Dashboard",
+      "chatbots": "Chatbots",
+      "conversations": "Conversations",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "header": {
+      "freePlan": "Free Plan",
+      "search": "Search...",
+      "notifications": "Notifications"
+    },
+    "chatbots": {
+      "new": {
+        "title": "Create New Chatbot",
+        "description": "Welcome back! Here's what's happening with your chatbots.",
+        "createButton": "Create Chatbot",
+        "steps": {
+          "intro": "Intro",
+          "sources": "Sources",
+          "ui": "Agent's UI",
+          "personality": "Personality",
+          "deploy": "Deploy"
+        },
+        "wizard": {
+          "intro": {
+            "title": "Let's start with a link",
+            "description": "Share your website link, and we'll automatically build an AI agent trained on your content.",
+            "urlLabel": "Your website URL",
+            "useCaseLabel": "Use-case",
+            "useCases": {
+              "general": "General AI agent",
+              "sales": "Sales agent",
+              "support": "Support agent"
+            },
+            "continue": "Continue",
+            "analyzing": "Fetching brand colors...",
+            "or": "Or",
+            "manual": "Set up manually with other sources"
+          },
+          "sources": {
+            "title": "Add training sources",
+            "description": "You can add multiple sources to train your Agent; let's start with a file or a link to your site.",
+            "types": {
+              "file": "File",
+              "text": "Text",
+              "website": "Website",
+              "qa": "Q&A"
+            }
+          }
+        }
+      }
+    },
+    "overview": {
+      "title": "Dashboard",
+      "welcome": "Welcome back! Here's what's happening with your chatbots.",
+      "createChatbot": "Create Chatbot",
+      "stats": {
+        "totalChatbots": "Total Chatbots",
+        "conversations": "Conversations",
+        "messages": "Messages",
+        "activeUsers": "Active Users",
+        "fromLastMonth": "from last month"
+      },
+      "recentChatbots": {
+        "title": "Recent Chatbots",
+        "viewAll": "View All",
+        "conversationsLabel": "conversations",
+        "status": {
+          "active": "Active",
+          "draft": "Draft"
+        }
+      },
+      "recentConversations": {
+        "title": "Recent Conversations",
+        "viewAll": "View All"
+      }
+    }
+  },
+  "Admin": {
+    "sidebar": {
+      "overview": "Overview",
+      "users": "Identity Management",
+      "chatbots": "Agent Audit",
+      "plans": "Plans & Payments",
+      "tokens": "Usage Analytics",
+      "apiKeys": "Neural Keys",
+      "system": "Infrastructure Status",
+      "settings": "Platform Settings",
+      "categories": {
+        "core": "Core",
+        "commerce": "Commerce",
+        "system": "System"
+      },
+      "status": {
+        "global": "Global Status",
+        "stable": "STABLE",
+        "dbSync": "DB SYNC",
+        "load": "Q-LOAD",
+        "low": "LOW"
+      },
+      "role": "Super Admin",
+      "access": "Full Access Permission"
+    }
+  },
+  "Landing": {
+    "Navigation": {
+      "features": "Features",
+      "howItWorks": "How it Works",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "dashboard": "Dashboard"
+    },
+    "HowItWorks": {
+      "badge": "Simple Process",
+      "title": "Build Your Chatbot in 3 Easy Steps",
+      "steps": [
+        {
+          "title": "Connect Your Data",
+          "description": "Enter your website URL or upload documents. Our AI automatically crawls and indexes all your content.",
+          "visual": "Crawling {count} pages..."
+        },
+        {
+          "title": "Train Your Bot",
+          "description": "Customize responses, set the personality, and fine-tune how your bot answers questions.",
+          "visual": "Training model..."
+        },
+        {
+          "title": "Deploy & Embed",
+          "description": "Get your embed code and add the chatbot to your website in seconds. No coding required.",
+          "visual": "Ready to deploy!"
+        }
+      ]
+    },
+    "Testimonials": {
+      "badge": "Customer Stories",
+      "title": "Loved by Teams Worldwide",
+      "items": [
+        {
+          "quote": "J.Caesar Agent transformed our customer support. Response times dropped 80% and customer satisfaction is at an all-time high.",
+          "author": "Sarah Chen",
+          "role": "CTO at TechFlow"
+        },
+        {
+          "quote": "The easiest chatbot builder I've ever used. Set up in 10 minutes, and it actually understands our product.",
+          "author": "Marcus Johnson",
+          "role": "Founder of StartupXYZ"
+        },
+        {
+          "quote": "We trained it on our entire documentation. Now it answers 90% of questions without human intervention.",
+          "author": "Emily Rodriguez",
+          "role": "Head of Support at CloudScale"
+        }
+      ]
+    },
+    "Pricing": {
+      "badge": "Pricing & Plans",
+      "title": "Flexible Plans for",
+      "subtitle": "Every Scale.",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "SAVE 20%",
+      "popular": "Most Popular",
+      "perMonth": "/ month",
+      "contact": "Contact",
+      "architecture": "Architecture",
+      "everythingIn": "Everything in {name}:",
+      "security": "Enterprise Security Included",
+      "plans": {
+        "Starter": {
+          "name": "Starter",
+          "description": "Ideal for solo innovators",
+          "cta": "Start Free Trial",
+          "features": [
+            "1 AI Agent",
+            "1,000 Messages /mo",
+            "Basic URL Crawling",
+            "Standard Analytics",
+            "Community Support"
+          ]
+        },
+        "Elite": {
+          "name": "Elite",
+          "description": "For rapid scale businesses",
+          "cta": "Go Elite Now",
+          "features": [
+            "10 AI Agents",
+            "25,000 Messages /mo",
+            "Priority Recursive Crawling",
+            "Deep Intelligence Dashboard",
+            "Full API Access",
+            "WhatsApp & Widget Channels",
+            "24/7 Priority Support"
+          ]
+        },
+        "Enterprise": {
+          "name": "Enterprise",
+          "description": "Total control & autonomy",
+          "cta": "Contact Architecture",
+          "features": [
+            "Unlimited AI Agents",
+            "Unlimited Messages",
+            "Custom RAG Pipeline",
+            "SLA Guarantee",
+            "White-label Widget",
+            "Dedicated AI Architect",
+            "On-premise Deployment"
+          ]
+        }
+      }
+    },
+    "FAQ": {
+      "badge": "FAQ",
+      "title": "Frequently Asked Questions",
+      "items": [
+        {
+          "question": "How does the AI training work?",
+          "answer": "Simply provide your website URL or upload your knowledge base documents. Our system use advanced RAG (Retrieval Augmented Generation) to index your content and build a custom intelligence model."
+        },
+        {
+          "question": "Can I customize the chatbot appearance?",
+          "answer": "Yes, you can fully customize the avatar, colors, welcome message, and placement to match your brand identity perfectly."
+        },
+        {
+          "question": "Does it support multiple languages?",
+          "answer": "Absolutely. J.Caesar supports over 50+ languages, including Turkish, English, Arabic, and more with automatic detection."
+        },
+        {
+          "question": "How do I embed it on my site?",
+          "answer": "After creation, you'll get a single line of script. Just copy and paste it into your website's header or use our official plugins."
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Ready to Automate Your",
+      "subtitle": "Business Intelligence?",
+      "primary": "Start Building Now",
+      "secondary": "Talk to Strategy",
+      "instant": "Instant Deployment",
+      "security": "Enterprise Security"
+    },
+    "Footer": {
+      "description": "Pioneering high-fidelity AI agents for the next era of business autonomy. Train, deploy, and scale with absolute precision.",
+      "categories": {
+        "Intelligence": "Intelligence",
+        "Architecture": "Architecture",
+        "Security": "Security",
+        "SystemStatus": "System Status"
+      },
+      "status": "Systems Operational",
+      "securityNote": "ISO/IEC 27001 Certified Security Protocol",
+      "copyright": "© {year} J.CAESAR AUTONOMY.",
+      "links": {
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "sla": "Architecture SLA"
+      }
+    }
+  }
+}

@@ -1,71 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Check, Zap, Star, ShieldCheck, ArrowRight } from "lucide-react";
+import { Check, Star, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-
-const plans = [
-  {
-    name: "Starter",
-    description: "Ideal for solo innovators",
-    monthlyPrice: 29,
-    yearlyPrice: 23,
-    features: [
-      "1 AI Agent",
-      "1,000 Messages /mo",
-      "Basic URL Crawling",
-      "Standard Analytics",
-      "Community Support",
-    ],
-    cta: "Start Free Trial",
-    href: "/sign-up",
-    color: "zinc",
-  },
-  {
-    name: "Elite",
-    description: "For rapid scale businesses",
-    monthlyPrice: 79,
-    yearlyPrice: 63,
-    features: [
-      "10 AI Agents",
-      "25,000 Messages /mo",
-      "Priority Recursive Crawling",
-      "Deep Intelligence Dashboard",
-      "Full API Access",
-      "WhatsApp & Widget Channels",
-      "24/7 Priority Support",
-    ],
-    cta: "Go Elite Now",
-    href: "/sign-up",
-    popular: true,
-    color: "primary",
-  },
-  {
-    name: "Enterprise",
-    description: "Total control & autonomy",
-    monthlyPrice: null,
-    yearlyPrice: null,
-    features: [
-      "Unlimited AI Agents",
-      "Unlimited Messages",
-      "Custom RAG Pipeline",
-      "SLA Guarantee",
-      "White-label Widget",
-      "Dedicated AI Architect",
-      "On-premise Deployment",
-    ],
-    cta: "Contact Architecture",
-    href: "/contact",
-    color: "zinc",
-  },
-];
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
+  const t = useTranslations("Landing.Pricing");
+
+  const plans = useMemo(() => [
+    {
+      name: t("plans.Starter.name"),
+      description: t("plans.Starter.description"),
+      monthlyPrice: 29,
+      yearlyPrice: 23,
+      features: [
+        t("plans.Starter.features.0"),
+        t("plans.Starter.features.1"),
+        t("plans.Starter.features.2"),
+        t("plans.Starter.features.3"),
+        t("plans.Starter.features.4"),
+      ],
+      cta: t("plans.Starter.cta"),
+      href: "/sign-up",
+      color: "zinc",
+    },
+    {
+      name: t("plans.Elite.name"),
+      description: t("plans.Elite.description"),
+      monthlyPrice: 79,
+      yearlyPrice: 63,
+      features: [
+        t("plans.Elite.features.0"),
+        t("plans.Elite.features.1"),
+        t("plans.Elite.features.2"),
+        t("plans.Elite.features.3"),
+        t("plans.Elite.features.4"),
+        t("plans.Elite.features.5"),
+        t("plans.Elite.features.6"),
+      ],
+      cta: t("plans.Elite.cta"),
+      href: "/sign-up",
+      popular: true,
+      color: "primary",
+    },
+    {
+      name: t("plans.Enterprise.name"),
+      description: t("plans.Enterprise.description"),
+      monthlyPrice: null,
+      yearlyPrice: null,
+      features: [
+        t("plans.Enterprise.features.0"),
+        t("plans.Enterprise.features.1"),
+        t("plans.Enterprise.features.2"),
+        t("plans.Enterprise.features.3"),
+        t("plans.Enterprise.features.4"),
+        t("plans.Enterprise.features.5"),
+        t("plans.Enterprise.features.6"),
+      ],
+      cta: t("plans.Enterprise.cta"),
+      href: "/contact",
+      color: "zinc",
+    },
+  ], [t]);
 
   return (
     <section id="pricing" className="py-32 bg-zinc-50/50 relative overflow-hidden">
@@ -79,7 +80,7 @@ export function Pricing() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-black/5 text-zinc-500 text-[10px] font-black uppercase tracking-widest"
           >
             <Star className="w-3 h-3 fill-zinc-400" />
-            Pricing & Plans
+            {t("badge")}
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -88,8 +89,8 @@ export function Pricing() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter text-zinc-900 leading-[0.95]"
           >
-             Flexible Plans for <br />
-             <span className="text-primary italic">Every Scale.</span>
+             {t("title")} <br />
+             <span className="text-primary italic">{t("subtitle")}</span>
           </motion.h2>
           
           {/* Toggle */}
@@ -99,7 +100,7 @@ export function Pricing() {
             viewport={{ once: true }}
             className="flex items-center justify-center gap-6 pt-4"
           >
-            <span className={`text-sm font-bold transition-colors ${!isYearly ? "text-zinc-900" : "text-zinc-400"}`}>Monthly</span>
+            <span className={`text-sm font-bold transition-colors ${!isYearly ? "text-zinc-900" : "text-zinc-400"}`}>{t("monthly")}</span>
             <div className="relative p-1 bg-zinc-200 rounded-full w-14 h-8 flex items-center">
                <motion.div 
                   animate={{ x: isYearly ? 24 : 0 }}
@@ -107,9 +108,9 @@ export function Pricing() {
                   onClick={() => setIsYearly(!isYearly)}
                />
             </div>
-            <span className={`text-sm font-bold transition-colors ${isYearly ? "text-zinc-900" : "text-zinc-400"}`}>Yearly</span>
+            <span className={`text-sm font-bold transition-colors ${isYearly ? "text-zinc-900" : "text-zinc-400"}`}>{t("yearly")}</span>
             {isYearly && (
-              <Badge className="bg-emerald-500 text-white border-none rounded-full py-1 px-3 text-[10px] font-black animate-pulse">SAVE 20%</Badge>
+              <Badge className="bg-emerald-500 text-white border-none rounded-full py-1 px-3 text-[10px] font-black animate-pulse">{t("save")}</Badge>
             )}
           </motion.div>
         </div>
@@ -131,7 +132,7 @@ export function Pricing() {
             >
               {plan.popular && (
                 <div className="absolute -top-5 left-1/2 -translate-x-1/2">
-                   <Badge className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full shadow-xl shadow-primary/30">Most Popular</Badge>
+                   <Badge className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full shadow-xl shadow-primary/30">{t("popular")}</Badge>
                 </div>
               )}
 
@@ -146,15 +147,15 @@ export function Pricing() {
                     <span className="text-6xl font-black tracking-tighter text-zinc-900">
                       ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                     </span>
-                    <span className="text-zinc-400 font-bold text-sm">/ month</span>
+                    <span className="text-zinc-400 font-bold text-sm">{t("perMonth")}</span>
                   </div>
                 ) : (
-                  <div className="text-5xl font-black tracking-tighter text-zinc-900 leading-none">Contact<br/><span className="text-lg text-zinc-400">Architecture</span></div>
+                  <div className="text-5xl font-black tracking-tighter text-zinc-900 leading-none">{t("contact")}<br/><span className="text-lg text-zinc-400">{t("architecture")}</span></div>
                 )}
               </div>
 
               <div className="space-y-6 mb-12 flex-1">
-                 <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Everything in {plan.name}:</p>
+                 <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t("everythingIn", { name: plan.name })}</p>
                  <ul className="space-y-4">
                    {plan.features.map((feature) => (
                      <li key={feature} className="flex items-start gap-3">
@@ -183,7 +184,7 @@ export function Pricing() {
               {plan.popular && (
                 <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
                    <ShieldCheck className="w-4 h-4" />
-                   Enterprise Security Included
+                   {t("security")}
                 </div>
               )}
             </motion.div>

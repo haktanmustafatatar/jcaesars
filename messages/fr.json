@@ -1,0 +1,252 @@
+{
+  "Common": {
+    "getStarted": "Commencer",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "demo": "Voir la démo",
+    "earlyAccess": "Accès Anticipé"
+  },
+  "Hero": {
+    "badge": "Agents IA de Nouvelle Génération",
+    "title1": "Bâtissez",
+    "titleElite": "l'Élite",
+    "title2": "de l'IA.",
+    "description": "Formez des agents IA sur mesure sur vos données en quelques secondes. Déployez un centre de commande haute fidélité qui gère les ventes, le support et la croissance de manière autonome.",
+    "trusted": "Approuvé par plus de 500 innovateurs",
+    "scaling": "Plus de 10 millions de conversations par mois",
+    "performance": "Performance",
+    "intelligence": "Intelligence",
+    "resolutions": "Résolutions",
+    "activeAgents": "Agents Actifs",
+    "growthRate": "Taux de Croissance",
+    "mockChatQ": "Comment puis-je automatiser mon support client ?",
+    "mockChatA": "Les agents JCaesar traitent 90% des demandes automatiquement."
+  },
+  "Features": {
+    "badge": "Intelligence de Base",
+    "title1": "Des capacités qui redéfinissent",
+    "titleAI": "l'Autonomie de l'IA.",
+    "title2": "",
+    "description": "Chaque fonctionnalité est conçue pour la rapidité, la précision et l'alignement absolu avec la marque.",
+    "explore": "Explorer la fonctionnalité",
+    "f1Title": "Entraînez sur n'importe quel site",
+    "f1Desc": "Extrayez automatiquement l'intelligence de n'importe quelle empreinte numérique. Notre IA comprend le contexte profond.",
+    "f2Title": "Connaissance Infinie",
+    "f2Desc": "Traitement transparent des PDF, Docs et données. Votre base de connaissances spécialisée, affinée.",
+    "f3Title": "Personnalité sur mesure",
+    "f3Desc": "Définissez l'âme de votre agent. Faites correspondre la voix de votre marque avec précision.",
+    "f4Title": "Déploiement d'Élite",
+    "f4Desc": "Un seul extrait. Portée infinie. Déployez sur toutes les plateformes avec une interface haute fidélité.",
+    "f5Title": "Analyse Pro",
+    "f5Desc": "Tableau de bord d'intelligence approfondie pour surveiller le comportement et les conversions.",
+    "f6Title": "Pour les Développeurs",
+    "f6Desc": "Capacités API complètes pour une intégration architecturale."
+  },
+  "Dashboard": {
+    "sidebar": {
+      "newChatbot": "Nouveau Chatbot",
+      "dashboard": "Tableau de bord",
+      "chatbots": "Chatbots",
+      "conversations": "Conversations",
+      "analytics": "Analytique",
+      "settings": "Paramètres"
+    },
+    "header": {
+      "freePlan": "Plan Gratuit",
+      "search": "Rechercher...",
+      "notifications": "Notifications"
+    },
+    "chatbots": {
+      "new": {
+        "title": "Créer un nouveau Chatbot",
+        "steps": {
+          "intro": "Intro",
+          "sources": "Sources",
+          "ui": "UI de l Agent",
+          "personality": "Personnalité",
+          "deploy": "Déployer"
+        }
+      }
+    }
+  },
+  "Admin": {
+    "sidebar": {
+      "overview": "Aperçu",
+      "users": "Gestion",
+      "chatbots": "Audit Ajan",
+      "plans": "Plans",
+      "tokens": "Analytics",
+      "apiKeys": "Clés",
+      "system": "Status",
+      "settings": "Paramètres",
+      "categories": {
+        "core": "Cœur",
+        "commerce": "Commerce",
+        "system": "Système"
+      },
+      "status": {
+        "global": "Statut Global",
+        "stable": "STABLE",
+        "dbSync": "DB SYNC",
+        "load": "CHARGE",
+        "low": "BASSE"
+      },
+      "role": "Super Admin",
+      "access": "Accès Total"
+    }
+  },
+  "Landing": {
+    "Navigation": {
+      "features": "Fonctionnalités",
+      "howItWorks": "Comment ça marche",
+      "pricing": "Tarifs",
+      "faq": "FAQ",
+      "dashboard": "Tableau de bord"
+    },
+    "HowItWorks": {
+      "badge": "Processus simple",
+      "title": "Créez votre chatbot en 3 étapes simples",
+      "steps": [
+        {
+          "title": "Connectez vos données",
+          "description": "Entrez l'URL de votre site ou téléchargez des documents. Notre IA explore et indexe automatiquement tout votre contenu.",
+          "visual": "Exploration de {count} pages..."
+        },
+        {
+          "title": "Entraînez votre bot",
+          "description": "Personnalisez les réponses, définissez la personnalité et affinez la manière dont votre bot répond aux questions.",
+          "visual": "Entraînement du modèle..."
+        },
+        {
+          "title": "Déployez et intégrez",
+          "description": "Obtenez votre code d'intégration et ajoutez le chatbot à votre site en quelques secondes. Sans aucun codage.",
+          "visual": "Prêt à déployer!"
+        }
+      ]
+    },
+    "Testimonials": {
+      "badge": "Témoignages clients",
+      "title": "Plébiscité par des équipes du monde entier",
+      "items": [
+        {
+          "quote": "L'agent J.Caesar a transformé notre support client. Les temps de réponse ont chuté de 80% et la satisfaction client est à son plus haut niveau.",
+          "author": "Sarah Chen",
+          "role": "Directrice technique chez TechFlow"
+        },
+        {
+          "quote": "Le constructeur de chatbot le plus simple que j'aie jamais utilisé. Configuré en 10 minutes, et il comprend vraiment notre produit.",
+          "author": "Marcus Johnson",
+          "role": "Fondateur de StartupXYZ"
+        },
+        {
+          "quote": "Nous l'avons entraîné sur toute notre documentation. Il répond maintenant à 90% des questions sans intervention humaine.",
+          "author": "Emily Rodriguez",
+          "role": "Responsable support chez CloudScale"
+        }
+      ]
+    },
+    "Pricing": {
+      "badge": "Tarifs et plans",
+      "title": "Des plans flexibles pour",
+      "subtitle": "toutes les échelles.",
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "save": "ÉCONOMISEZ 20%",
+      "popular": "Le plus populaire",
+      "perMonth": "/ mois",
+      "contact": "Contactez",
+      "architecture": "notre équipe",
+      "everythingIn": "Tout dans {name} :",
+      "security": "Sécurité d'entreprise incluse",
+      "plans": {
+        "Starter": {
+          "name": "Starter",
+          "description": "Idéal pour les innovateurs solo",
+          "cta": "Commencer l'essai gratuit",
+          "features": [
+            "1 agent IA",
+            "1 000 messages/mois",
+            "Exploration URL basique",
+            "Analytiques standard",
+            "Support communautaire"
+          ]
+        },
+        "Elite": {
+          "name": "Elite",
+          "description": "Pour les entreprises en forte croissance",
+          "cta": "Passer à Elite",
+          "features": [
+            "10 agents IA",
+            "25 000 messages/mois",
+            "Exploration récursive prioritaire",
+            "Tableau de bord analytique avancé",
+            "Accès API complet",
+            "Canaux WhatsApp et widget",
+            "Support prioritaire 24/7"
+          ]
+        },
+        "Enterprise": {
+          "name": "Entreprise",
+          "description": "Contrôle total et autonomie",
+          "cta": "Contacter l'équipe",
+          "features": [
+            "Agents IA illimités",
+            "Messages illimités",
+            "Pipeline RAG personnalisé",
+            "Garantie SLA",
+            "Widget en marque blanche",
+            "Architecte IA dédié",
+            "Déploiement sur site"
+          ]
+        }
+      }
+    },
+    "FAQ": {
+      "badge": "FAQ",
+      "title": "Questions fréquemment posées",
+      "items": [
+        {
+          "question": "Comment fonctionne l'entraînement IA ?",
+          "answer": "Fournissez simplement l'URL de votre site ou téléchargez vos documents base de connaissances. Notre système utilise le RAG avancé pour indexer votre contenu."
+        },
+        {
+          "question": "Puis-je personnaliser l'apparence du chatbot ?",
+          "answer": "Oui, vous pouvez entièrement personnaliser l'avatar, les couleurs, le message de bienvenue et le placement pour correspondre à votre identité de marque."
+        },
+        {
+          "question": "Prend-il en charge plusieurs langues ?",
+          "answer": "Absolument. J.Caesar supporte plus de 50 langues, dont le français, l'anglais, l'arabe et plus encore, avec détection automatique."
+        },
+        {
+          "question": "Comment l'intégrer à mon site ?",
+          "answer": "Après la création, vous obtiendrez une seule ligne de script. Copiez-la et collez-la dans l'en-tête de votre site ou utilisez nos plugins officiels."
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Prêt à automatiser votre",
+      "subtitle": "intelligence d'affaires ?",
+      "primary": "Commencer maintenant",
+      "secondary": "Parler à l'équipe",
+      "instant": "Déploiement instantané",
+      "security": "Sécurité d'entreprise"
+    },
+    "Footer": {
+      "description": "Nous développons des agents IA haute fidélité pour la prochaine ère d'autonomie des entreprises. Entraînez, déployez et évoluez avec une précision absolue.",
+      "categories": {
+        "Intelligence": "Intelligence",
+        "Architecture": "Architecture",
+        "Security": "Sécurité",
+        "SystemStatus": "Statut du système"
+      },
+      "status": "Systèmes opérationnels",
+      "securityNote": "Protocole de sécurité certifié ISO/IEC 27001",
+      "copyright": "© {year} J.CAESAR AUTONOMY.",
+      "links": {
+        "privacy": "Confidentialité",
+        "terms": "Conditions",
+        "sla": "SLA Architecture"
+      }
+    }
+  }
+}

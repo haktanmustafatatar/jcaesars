@@ -2,32 +2,35 @@
 
 import { motion } from "framer-motion";
 import { Link2, Brain, Rocket } from "lucide-react";
-
-const steps = [
-  {
-    number: "01",
-    icon: Link2,
-    title: "Connect Your Data",
-    description:
-      "Enter your website URL or upload documents. Our AI automatically crawls and indexes all your content.",
-  },
-  {
-    number: "02",
-    icon: Brain,
-    title: "Train Your Bot",
-    description:
-      "Customize responses, set the personality, and fine-tune how your bot answers questions.",
-  },
-  {
-    number: "03",
-    icon: Rocket,
-    title: "Deploy & Embed",
-    description:
-      "Get your embed code and add the chatbot to your website in seconds. No coding required.",
-  },
-];
+import { useTranslations } from "next-intl";
 
 export function HowItWorks() {
+  const t = useTranslations("Landing.HowItWorks");
+
+  const steps = [
+    {
+      number: "01",
+      icon: Link2,
+      title: t("steps.0.title"),
+      description: t("steps.0.description"),
+      visual: t("steps.0.visual", { count: 247 }),
+    },
+    {
+      number: "02",
+      icon: Brain,
+      title: t("steps.1.title"),
+      description: t("steps.1.description"),
+      visual: t("steps.1.visual"),
+    },
+    {
+      number: "03",
+      icon: Rocket,
+      title: t("steps.2.title"),
+      description: t("steps.2.description"),
+      visual: t("steps.2.visual"),
+    },
+  ];
+
   return (
     <section id="how-it-works" className="py-24 lg:py-32 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +42,7 @@ export function HowItWorks() {
             viewport={{ once: true }}
             className="text-sm font-medium text-primary mb-4 tracking-wider uppercase"
           >
-            Simple Process
+            {t("badge")}
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -49,7 +52,7 @@ export function HowItWorks() {
             className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight"
             style={{ fontFamily: "var(--font-fraunces)" }}
           >
-            Build Your Chatbot in 3 Easy Steps
+            {t("title")}
           </motion.h2>
         </div>
 
@@ -116,7 +119,7 @@ export function HowItWorks() {
                         <div className="flex gap-2">
                           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           <span className="text-xs text-muted-foreground">
-                            Crawling 247 pages...
+                            {step.visual}
                           </span>
                         </div>
                       </div>
@@ -126,23 +129,23 @@ export function HowItWorks() {
                         <div className="p-4 bg-muted rounded-xl">
                           <p className="text-sm font-medium mb-2">Personality</p>
                           <div className="flex gap-2 flex-wrap">
-                            {["Friendly", "Professional", "Casual"].map((t) => (
+                            {["Friendly", "Professional", "Casual"].map((tLabel) => (
                               <span
-                                key={t}
+                                key={tLabel}
                                 className={`px-3 py-1 rounded-full text-xs ${
-                                  t === "Professional"
+                                  tLabel === "Professional"
                                     ? "bg-primary text-white"
                                     : "bg-white border"
                                 }`}
                               >
-                                {t}
+                                {tLabel}
                               </span>
                             ))}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Brain className="w-4 h-4 text-primary" />
-                          <span>Training model...</span>
+                          <span>{step.visual}</span>
                         </div>
                       </div>
                     )}
@@ -157,7 +160,7 @@ export function HowItWorks() {
                         <div className="flex items-center gap-2">
                           <Rocket className="w-4 h-4 text-primary" />
                           <span className="text-sm text-muted-foreground">
-                            Ready to deploy!
+                            {step.visual}
                           </span>
                         </div>
                       </div>

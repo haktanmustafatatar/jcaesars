@@ -13,51 +13,7 @@ import {
   Zap,
   ArrowRight
 } from "lucide-react";
-
-const features = [
-  {
-    icon: Globe,
-    title: "Train on Any Website",
-    description:
-      "Automatically crawl and extract intelligence from any digital footprint. Our AI understands deep context.",
-    color: "bg-blue-500"
-  },
-  {
-    icon: FileText,
-    title: "Infinite Knowledge",
-    description:
-      "Seamless processing for PDFs, Docs, and structured data. Your specialized knowledge base, refined.",
-    color: "bg-emerald-500"
-  },
-  {
-    icon: Sparkles,
-    title: "Bespoke Personality",
-    description:
-      "Define your agent's soul. Match your brand's voice with absolute precision and elegance.",
-    color: "bg-pink-500"
-  },
-  {
-    icon: Code,
-    title: "Elite Deployment",
-    description:
-      "One snippet. Infinite reach. Deploy across platforms with a high-fidelity interface.",
-    color: "bg-amber-500"
-  },
-  {
-    icon: BarChart3,
-    title: "Pro Analytics",
-    description:
-      "Deep intelligence dashboard to monitor behavior, sentiment, and conversion metrics.",
-    color: "bg-indigo-500"
-  },
-  {
-    icon: Terminal,
-    title: "Developer First",
-    description:
-      "Full API capabilities for architectural integration. Built for those who demand flexibility.",
-    color: "bg-zinc-900"
-  },
-];
+import { useTranslations } from "next-intl";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -82,6 +38,47 @@ const itemVariants = {
 };
 
 export function Features() {
+  const t = useTranslations("Features");
+
+  const featuresList = [
+    {
+      icon: Globe,
+      title: t("f1Title"),
+      description: t("f1Desc"),
+      color: "bg-blue-500"
+    },
+    {
+      icon: FileText,
+      title: t("f2Title"),
+      description: t("f2Desc"),
+      color: "bg-emerald-500"
+    },
+    {
+      icon: Sparkles,
+      title: t("f3Title"),
+      description: t("f3Desc"),
+      color: "bg-pink-500"
+    },
+    {
+      icon: Code,
+      title: t("f4Title"),
+      description: t("f4Desc"),
+      color: "bg-amber-500"
+    },
+    {
+      icon: BarChart3,
+      title: t("f5Title"),
+      description: t("f5Desc"),
+      color: "bg-indigo-500"
+    },
+    {
+      icon: Terminal,
+      title: t("f6Title"),
+      description: t("f6Desc"),
+      color: "bg-zinc-900"
+    },
+  ];
+
   return (
     <section id="features" className="py-32 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -94,7 +91,7 @@ export function Features() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-primary text-[10px] font-black uppercase tracking-widest"
           >
             <Cpu className="w-3 h-3" />
-            Core Intelligence
+            {t("badge")}
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -103,8 +100,8 @@ export function Features() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter text-zinc-900 leading-[0.95]"
           >
-            Capabilities that Redefine <br />
-            <span className="text-primary italic">AI Autonomy.</span>
+            {t("title1")} <br />
+            <span className="text-primary italic">{t("titleAI")}</span> {t("title2")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -113,7 +110,7 @@ export function Features() {
             transition={{ delay: 0.2 }}
             className="text-lg text-zinc-500 font-medium leading-relaxed"
           >
-            Every feature is engineered for speed, accuracy, and absolute brand alignment.
+            {t("description")}
           </motion.p>
         </div>
 
@@ -125,7 +122,7 @@ export function Features() {
           viewport={{ once: true, margin: "-100px" }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {features.map((feature, i) => (
+          {featuresList.map((feature, i) => (
             <motion.div
               key={feature.title}
               variants={itemVariants}
@@ -147,7 +144,7 @@ export function Features() {
               
               <div className="mt-8 pt-8 border-t border-black/[0.03] opacity-0 group-hover:opacity-100 transition-opacity">
                  <button className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2 group/btn">
-                    Explore Feature
+                    {t("explore")}
                     <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                  </button>
               </div>

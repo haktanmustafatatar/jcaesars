@@ -5,8 +5,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles, MessageCircle, BarChart3, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
 export function Hero() {
+  const t = useTranslations("Hero");
+  const tCommon = useTranslations("Common");
+
   return (
     <section className="relative min-h-screen flex items-center pt-32 pb-20 overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
       {/* Dynamic Background Elements */}
@@ -27,7 +31,7 @@ export function Hero() {
             >
               <Badge variant="secondary" className="px-4 py-1.5 rounded-full bg-white/50 backdrop-blur-md border border-black/[0.05] shadow-sm text-primary font-bold text-xs gap-2">
                 <Sparkles className="w-3.5 h-3.5 fill-primary/20" />
-                Next Generation AI Agents
+                {t("badge")}
               </Badge>
             </motion.div>
 
@@ -38,8 +42,8 @@ export function Hero() {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] text-zinc-900"
                >
-                  Build <span className="text-primary translate-y-2 inline-block">Elite</span> <br />
-                  AI Intelligence.
+                  {t("title1")} <span className="text-primary translate-y-2 inline-block">{t("titleElite")}</span> <br />
+                  {t("title2")}
                </motion.h1>
                <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -47,7 +51,7 @@ export function Hero() {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="text-lg md:text-xl text-zinc-500 font-medium max-w-xl leading-relaxed"
                >
-                  Train bespoke AI agents on your data in seconds. Deploy a high-fidelity command center that handles sales, support, and growth—autonomously.
+                  {t("description")}
                </motion.p>
             </div>
 
@@ -60,13 +64,13 @@ export function Hero() {
               <Link href="/sign-up">
                 <Button size="lg" className="h-14 px-10 rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800 font-bold text-base shadow-2xl shadow-zinc-950/20 group relative overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                   Get Early Access
+                   {tCommon("earlyAccess")}
                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Button variant="outline" size="lg" className="h-14 px-10 rounded-2xl border-black/10 font-bold text-base hover:bg-white shadow-sm transition-all group">
                 <Play className="mr-2 w-5 h-5 fill-zinc-900" />
-                Watch Demo
+                {tCommon("demo")}
               </Button>
             </motion.div>
 
@@ -83,8 +87,8 @@ export function Hero() {
                   ))}
                </div>
                <div>
-                  <p className="text-sm font-bold text-zinc-800">Trusted by 500+ Innovators</p>
-                  <p className="text-xs text-zinc-400 font-medium tracking-tight uppercase">Scaling 10M+ Conversations Monthly</p>
+                  <p className="text-sm font-bold text-zinc-800">{t("trusted")}</p>
+                  <p className="text-xs text-zinc-400 font-medium tracking-tight uppercase">{t("scaling")}</p>
                </div>
             </motion.div>
           </div>
@@ -104,8 +108,8 @@ export function Hero() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary"><BarChart3 className="w-5 h-5" /></div>
                         <div>
-                           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Intelligence</p>
-                           <p className="text-lg font-black text-zinc-900 tracking-tight">Performance</p>
+                           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{t("intelligence")}</p>
+                           <p className="text-lg font-black text-zinc-900 tracking-tight">{t("performance")}</p>
                         </div>
                       </div>
                       <div className="flex gap-1.5">
@@ -118,14 +122,14 @@ export function Hero() {
                    {/* Mock Metrics */}
                    <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 rounded-3xl bg-zinc-50 border border-black/[0.02] space-y-1">
-                         <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">Resolutions</p>
+                         <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">{t("resolutions")}</p>
                          <p className="text-2xl font-black text-zinc-900 leading-none">94.2%</p>
                          <div className="h-1 w-full bg-primary/10 rounded-full mt-2 overflow-hidden">
                             <div className="h-full w-[94%] bg-primary rounded-full" />
                          </div>
                       </div>
                       <div className="p-4 rounded-3xl bg-zinc-50 border border-black/[0.02] space-y-1">
-                         <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">Active Agents</p>
+                         <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">{t("activeAgents")}</p>
                          <p className="text-2xl font-black text-zinc-900 leading-none">12</p>
                          <div className="flex gap-1 mt-2">
                             {[1,1,1,0].map((v, i) => (
@@ -140,12 +144,12 @@ export function Hero() {
                       <div className="flex gap-3">
                          <div className="w-8 h-8 rounded-xl bg-zinc-100 flex-shrink-0" />
                          <div className="p-3 bg-zinc-100 rounded-2xl rounded-tl-sm text-[11px] font-medium text-zinc-600 max-w-[80%]">
-                            How can I scale my customer support?
+                            {t("mockChatQ")}
                          </div>
                       </div>
                       <div className="flex gap-3 justify-end items-end">
                          <div className="p-3 bg-primary text-white rounded-2xl rounded-br-sm text-[11px] font-bold max-w-[80%] shadow-lg shadow-primary/20">
-                            JCaesar Agents handle 90% of queries automatically.
+                            {t("mockChatA")}
                          </div>
                          <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><Zap className="w-4 h-4 fill-primary" /></div>
                       </div>
@@ -177,7 +181,7 @@ export function Hero() {
              >
                 <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500"><MessageCircle className="w-6 h-6" /></div>
                 <div>
-                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Growth Rate</p>
+                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">{t("growthRate")}</p>
                    <p className="text-xl font-black text-zinc-900 leading-tight">+240%</p>
                 </div>
              </motion.div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Bot,
@@ -58,16 +59,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-const STEPS = [
-  { id: "start", label: "Intro", icon: Globe },
-  { id: "sources", label: "Sources", icon: Database },
-  { id: "ui", label: "Agent's UI", icon: Palette },
-  { id: "personality", label: "Personality", icon: Bot },
-  { id: "deploy", label: "Deploy", icon: Rocket },
-];
-
 export default function NewChatbotPage() {
   const router = useRouter();
+  const t = useTranslations("Dashboard.chatbots.new");
+  
+  const STEPS = [
+    { id: "start", label: t("steps.intro"), icon: Globe },
+    { id: "sources", label: t("steps.sources"), icon: Database },
+    { id: "ui", label: t("steps.ui"), icon: Palette },
+    { id: "personality", label: t("steps.personality"), icon: Bot },
+    { id: "deploy", label: t("steps.deploy"), icon: Rocket },
+  ];
+
   const [currentStep, setCurrentStep] = useState("start");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState<string[]>([]);
@@ -408,13 +411,13 @@ export default function NewChatbotPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-0 min-h-[600px] border border-zinc-100 rounded-[32px] overflow-hidden bg-white shadow-2xl shadow-black/5">
             <div className="p-16 space-y-12 border-r border-zinc-100 flex flex-col justify-center">
               <div className="space-y-4">
-                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Let's start with a link</h2>
-                <p className="text-zinc-500 font-medium text-lg">Share your website link, and we'll automatically build an AI agent trained on your content.</p>
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">{t("wizard.intro.title")}</h2>
+                <p className="text-zinc-500 font-medium text-lg">{t("wizard.intro.description")}</p>
               </div>
 
-              <div className="space-y-6">
+                <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-bold text-zinc-600">Your website URL</Label>
+                  <Label className="text-sm font-bold text-zinc-600">{t("wizard.intro.urlLabel")}</Label>
                   <div className="flex gap-2">
                     <Select defaultValue="https">
                       <SelectTrigger className="w-[120px] h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
@@ -435,15 +438,15 @@ export default function NewChatbotPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-bold text-zinc-600">Use-case</Label>
+                  <Label className="text-sm font-bold text-zinc-600">{t("wizard.intro.useCaseLabel")}</Label>
                   <Select value={formData.useCase} onValueChange={(v) => generatePrompt(v)}>
                     <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="general">General AI agent</SelectItem>
-                      <SelectItem value="sales">Sales agent</SelectItem>
-                      <SelectItem value="support">Support agent</SelectItem>
+                      <SelectItem value="general">{t("wizard.intro.useCases.general")}</SelectItem>
+                      <SelectItem value="sales">{t("wizard.intro.useCases.sales")}</SelectItem>
+                      <SelectItem value="support">{t("wizard.intro.useCases.support")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -457,16 +460,16 @@ export default function NewChatbotPage() {
                     {isAnalyzing ? (
                       <div className="flex items-center gap-3">
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Fetching brand colors...
+                        {t("wizard.intro.analyzing")}
                       </div>
                     ) : (
-                      "Continue"
+                      t("wizard.intro.continue")
                     )}
                   </Button>
 
                   <div className="flex items-center justify-center gap-4 py-2">
                     <div className="h-[1px] flex-1 bg-zinc-100" />
-                    <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">Or</span>
+                    <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">{t("wizard.intro.or")}</span>
                     <div className="h-[1px] flex-1 bg-zinc-100" />
                   </div>
 
@@ -475,7 +478,7 @@ export default function NewChatbotPage() {
                     onClick={() => setCurrentStep("sources")}
                     className="w-full h-14 text-zinc-400 hover:text-zinc-950 font-bold text-base transition-all"
                   >
-                    Set up manually with other sources
+                    {t("wizard.intro.manual")}
                   </Button>
                 </div>
               </div>
@@ -559,8 +562,8 @@ export default function NewChatbotPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-0 min-h-[600px] border border-zinc-100 rounded-[32px] overflow-hidden bg-white shadow-2xl shadow-black/5">
             <div className="p-16 space-y-12 border-r border-zinc-100">
               <div className="space-y-4">
-                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Add training sources</h2>
-                <p className="text-zinc-500 font-medium text-lg">You can add multiple sources to train your Agent, let's start with a file or a link to your site.</p>
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">{t("wizard.sources.title")}</h2>
+                <p className="text-zinc-500 font-medium text-lg">{t("wizard.sources.description")}</p>
               </div>
 
               <div className="space-y-0 divide-y divide-zinc-100 border-y border-zinc-100">
@@ -573,7 +576,7 @@ export default function NewChatbotPage() {
                     <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
                       <FileText className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">File</span>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">{t("wizard.sources.types.file")}</span>
                   </div>
                   <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
                     {selectedDocuments.length > 0 ? (
@@ -593,7 +596,7 @@ export default function NewChatbotPage() {
                     <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center border border-zinc-100 text-zinc-400 group-hover:text-zinc-950 transition-colors">
                       <Type className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">Text</span>
+                    <span className="font-bold text-zinc-600 group-hover:text-zinc-950 transition-colors">{t("wizard.sources.types.text")}</span>
                   </div>
                   <div className="w-10 h-10 rounded-xl border border-zinc-100 flex items-center justify-center bg-white group-hover:border-zinc-300 transition-colors">
                     {formData.rawText.length > 0 ? (

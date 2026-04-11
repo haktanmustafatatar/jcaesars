@@ -6,19 +6,23 @@ import { useAuth, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const navLinks = [
-  { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How it Works" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
-];
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useTranslations } from "next-intl";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isSignedIn } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const tCommon = useTranslations("Common");
+  const t = useTranslations("Landing.Navigation");
+
+  const navLinks = [
+    { href: "#features", label: t("features") },
+    { href: "#how-it-works", label: t("howItWorks") },
+    { href: "#pricing", label: t("pricing") },
+    { href: "#faq", label: t("faq") },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -43,7 +47,7 @@ export function Navigation() {
                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
                <Zap className="w-5 h-5 text-white relative z-10 fill-white" />
             </div>
-            <span className="text-xl font-black tracking-tighter text-zinc-900">
+            <span className="text-xl font-black tracking-tighter text-zinc-900 uppercase">
               J.CAESAR
             </span>
           </Link>
@@ -62,15 +66,17 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Auth Actions */}
+          {/* Auth Actions & Language Switcher */}
           <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
+            <div className="w-px h-6 bg-black/10 mx-2" />
             {mounted && (
               <>
                 {isSignedIn ? (
                   <div className="flex items-center gap-4">
                     <Link href="/dashboard">
                       <Button variant="ghost" className="font-bold text-sm h-10 px-6 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
-                        Dashboard
+                        {t("dashboard")}
                       </Button>
                     </Link>
                     <UserButton afterSignOutUrl="/" />
@@ -79,12 +85,12 @@ export function Navigation() {
                   <div className="flex items-center gap-4">
                     <Link href="/sign-in">
                       <Button variant="ghost" className="font-bold text-sm h-10 px-6 rounded-xl hover:bg-primary/5 transition-all">
-                        Login
+                        {tCommon("login")}
                       </Button>
                     </Link>
                     <Link href="/sign-up">
                       <Button className="font-bold text-sm h-11 px-8 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 shadow-xl shadow-zinc-950/20 transition-all group active:scale-95">
-                        Get Started
+                        {tCommon("getStarted")}
                         <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
@@ -129,12 +135,12 @@ export function Navigation() {
               <div className="flex flex-col gap-3 pt-2">
                 <Link href="/sign-in" className="w-full">
                   <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-black/10">
-                    Login
+                    {tCommon("login")}
                   </Button>
                 </Link>
                 <Link href="/sign-up" className="w-full">
                   <Button className="w-full h-12 rounded-xl font-bold bg-primary text-white">
-                    Get Started
+                    {tCommon("getStarted")}
                   </Button>
                 </Link>
               </div>

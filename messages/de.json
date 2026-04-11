@@ -1,0 +1,252 @@
+{
+  "Common": {
+    "getStarted": "Loslegen",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "demo": "Demo ansehen",
+    "earlyAccess": "Frühzeitigen Zugang erhalten"
+  },
+  "Hero": {
+    "badge": "KI-Agenten der nächsten Generation",
+    "title1": "Erstellen Sie",
+    "titleElite": "Elite",
+    "title2": "KI-Intelligenz.",
+    "description": "Trainieren Sie in Sekundenschnelle maßgeschneiderte KI-Agenten mit Ihren Daten. Stellen Sie ein hochpräzises Kommandozentrum bereit, das Vertrieb, Support und Wachstum autonom abwickelt.",
+    "trusted": "Über 500+ Innovatoren vertrauen uns",
+    "scaling": "Skalierung von 10M+ Konversationen monatlich",
+    "performance": "Leistung",
+    "intelligence": "Intelligenz",
+    "resolutions": "Lösungen",
+    "activeAgents": "Aktive Agenten",
+    "growthRate": "Wachstumsrate",
+    "mockChatQ": "Wie kann ich meinen Kundensupport skalieren?",
+    "mockChatA": "JCaesar Agenten bearbeiten 90% der Anfragen automatisch."
+  },
+  "Features": {
+    "badge": "Kernintelligenz",
+    "title1": "Fähigkeiten, die die",
+    "titleAI": "KI-Autonomie",
+    "title2": "neu definieren.",
+    "description": "Jede Funktion ist auf Geschwindigkeit, Genauigkeit und absolute Markenausrichtung ausgelegt.",
+    "explore": "Funktion erkunden",
+    "f1Title": "Auf jeder Website trainieren",
+    "f1Desc": "Extrahieren Sie automatisch Informationen aus jedem digitalen Fußabdruck.",
+    "f2Title": "Unendliches Wissen",
+    "f2Desc": "Nahtlose Verarbeitung für PDFs, Docs und strukturierte Daten.",
+    "f3Title": "Maßgeschneiderte Persönlichkeit",
+    "f3Desc": "Definieren Sie die Seele Ihres Agenten. Passen Sie die Stimme Ihrer Marke mit absoluter Präzision an.",
+    "f4Title": "Elite-Bereitstellung",
+    "f4Desc": "Ein Snippet. Unendliche Reichweite. Stellen Sie Plattformen mit einer hochwertigen Schnittstelle bereit.",
+    "f5Title": "Pro-Analyse",
+    "f5Desc": "Deep-Intelligence-Dashboard zur Überwachung von Verhalten, Stimmung und Konversionen.",
+    "f6Title": "Developer First",
+    "f6Desc": "Volle API-Funktionen für die architektonische Integration."
+  },
+  "Dashboard": {
+    "sidebar": {
+      "newChatbot": "Neuer Chatbot",
+      "dashboard": "Dashboard",
+      "chatbots": "Chatbots",
+      "conversations": "Gespräche",
+      "analytics": "Analytik",
+      "settings": "Einstellungen"
+    },
+    "header": {
+      "freePlan": "Kostenloser Plan",
+      "search": "Suche...",
+      "notifications": "Benachrichtigungen"
+    },
+    "chatbots": {
+      "new": {
+        "title": "Neuen Chatbot erstellen",
+        "steps": {
+          "intro": "Intro",
+          "sources": "Quellen",
+          "ui": "Agenten-UI",
+          "personality": "Persönlichkeit",
+          "deploy": "Bereitstellen"
+        }
+      }
+    }
+  },
+  "Admin": {
+    "sidebar": {
+      "overview": "Übersicht",
+      "users": "Verwaltung",
+      "chatbots": "Agenten-Audit",
+      "plans": "Pläne",
+      "tokens": "Analytik",
+      "apiKeys": "Schlüssel",
+      "system": "Status",
+      "settings": "Einstellungen",
+      "categories": {
+        "core": "Kern",
+        "commerce": "Handel",
+        "system": "System"
+      },
+      "status": {
+        "global": "Globaler Status",
+        "stable": "STABIL",
+        "dbSync": "DB SYNC",
+        "load": "LAST",
+        "low": "NIEDRIG"
+      },
+      "role": "Super Admin",
+      "access": "Vollzugriff"
+    }
+  },
+  "Landing": {
+    "Navigation": {
+      "features": "Funktionen",
+      "howItWorks": "Wie es funktioniert",
+      "pricing": "Preise",
+      "faq": "FAQ",
+      "dashboard": "Dashboard"
+    },
+    "HowItWorks": {
+      "badge": "Einfacher Prozess",
+      "title": "Erstellen Sie Ihren Chatbot in 3 einfachen Schritten",
+      "steps": [
+        {
+          "title": "Daten verbinden",
+          "description": "Geben Sie Ihre Website-URL ein oder laden Sie Dokumente hoch. Unsere KI crawlt und indiziert automatisch alle Ihre Inhalte.",
+          "visual": "{count} Seiten werden gecrawlt..."
+        },
+        {
+          "title": "Bot trainieren",
+          "description": "Passen Sie Antworten an, legen Sie die Persönlichkeit fest und optimieren Sie, wie Ihr Bot Fragen beantwortet.",
+          "visual": "Modell wird trainiert..."
+        },
+        {
+          "title": "Bereitstellen und Einbetten",
+          "description": "Holen Sie sich Ihren Einbettungscode und fügen Sie den Chatbot in Sekunden zu Ihrer Website hinzu. Kein Programmieren erforderlich.",
+          "visual": "Bereit zur Bereitstellung!"
+        }
+      ]
+    },
+    "Testimonials": {
+      "badge": "Kundengeschichten",
+      "title": "Von Teams weltweit geliebt",
+      "items": [
+        {
+          "quote": "J.Caesar Agent hat unseren Kundensupport transformiert. Die Reaktionszeiten sanken um 80% und die Kundenzufriedenheit ist auf einem Allzeithoch.",
+          "author": "Sarah Chen",
+          "role": "CTO bei TechFlow"
+        },
+        {
+          "quote": "Der einfachste Chatbot-Builder, den ich je benutzt habe. In 10 Minuten eingerichtet und versteht unser Produkt wirklich.",
+          "author": "Marcus Johnson",
+          "role": "Gründer von StartupXYZ"
+        },
+        {
+          "quote": "Wir haben ihn mit unserer gesamten Dokumentation trainiert. Jetzt beantwortet er 90% der Fragen ohne menschliches Eingreifen.",
+          "author": "Emily Rodriguez",
+          "role": "Support-Leiterin bei CloudScale"
+        }
+      ]
+    },
+    "Pricing": {
+      "badge": "Preise und Pläne",
+      "title": "Flexible Pläne für",
+      "subtitle": "jeden Maßstab.",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich",
+      "save": "20% SPAREN",
+      "popular": "Am beliebtesten",
+      "perMonth": "/ Monat",
+      "contact": "Kontaktieren",
+      "architecture": "Sie uns",
+      "everythingIn": "Alles in {name}:",
+      "security": "Unternehmenssicherheit inklusive",
+      "plans": {
+        "Starter": {
+          "name": "Starter",
+          "description": "Ideal für Einzelinnovatoren",
+          "cta": "Kostenlose Testversion starten",
+          "features": [
+            "1 KI-Agent",
+            "1.000 Nachrichten/Monat",
+            "Grundlegendes URL-Crawling",
+            "Standard-Analytik",
+            "Community-Support"
+          ]
+        },
+        "Elite": {
+          "name": "Elite",
+          "description": "Für schnell wachsende Unternehmen",
+          "cta": "Jetzt Elite werden",
+          "features": [
+            "10 KI-Agenten",
+            "25.000 Nachrichten/Monat",
+            "Prioritäts-Rekursiv-Crawling",
+            "Tiefes Intelligence-Dashboard",
+            "Vollständiger API-Zugriff",
+            "WhatsApp- und Widget-Kanäle",
+            "24/7 Prioritätssupport"
+          ]
+        },
+        "Enterprise": {
+          "name": "Enterprise",
+          "description": "Volle Kontrolle und Autonomie",
+          "cta": "Architektur kontaktieren",
+          "features": [
+            "Unbegrenzte KI-Agenten",
+            "Unbegrenzte Nachrichten",
+            "Benutzerdefinierte RAG-Pipeline",
+            "SLA-Garantie",
+            "White-Label-Widget",
+            "Dedizierter KI-Architekt",
+            "On-Premise-Einsatz"
+          ]
+        }
+      }
+    },
+    "FAQ": {
+      "badge": "FAQ",
+      "title": "Häufig gestellte Fragen",
+      "items": [
+        {
+          "question": "Wie funktioniert das KI-Training?",
+          "answer": "Geben Sie einfach Ihre Website-URL an oder laden Sie Wissensbasis-Dokumente hoch. Unser System verwendet fortgeschrittenes RAG, um Ihre Inhalte zu indizieren."
+        },
+        {
+          "question": "Kann ich das Erscheinungsbild des Chatbots anpassen?",
+          "answer": "Ja, Sie können Avatar, Farben, Willkommensnachricht und Platzierung vollständig anpassen, um Ihrer Markenidentität zu entsprechen."
+        },
+        {
+          "question": "Unterstützt es mehrere Sprachen?",
+          "answer": "Absolut. J.Caesar unterstützt über 50 Sprachen, darunter Deutsch, Englisch, Arabisch und mehr mit automatischer Erkennung."
+        },
+        {
+          "question": "Wie bette ich es auf meiner Website ein?",
+          "answer": "Nach der Erstellung erhalten Sie eine einzelne Script-Zeile. Kopieren Sie diese und fügen Sie sie in den Header Ihrer Website ein oder verwenden Sie unsere offiziellen Plugins."
+        }
+      ]
+    },
+    "CTA": {
+      "title": "Bereit, Ihre",
+      "subtitle": "Business-Intelligence zu automatisieren?",
+      "primary": "Jetzt loslegen",
+      "secondary": "Strategie besprechen",
+      "instant": "Sofortige Bereitstellung",
+      "security": "Unternehmenssicherheit"
+    },
+    "Footer": {
+      "description": "Wir entwickeln hochwertige KI-Agenten für die nächste Ära der Unternehmensautonomie. Trainieren, bereitstellen und skalieren Sie mit absoluter Präzision.",
+      "categories": {
+        "Intelligence": "Intelligence",
+        "Architecture": "Architektur",
+        "Security": "Sicherheit",
+        "SystemStatus": "Systemstatus"
+      },
+      "status": "Systeme betriebsbereit",
+      "securityNote": "ISO/IEC 27001 zertifiziertes Sicherheitsprotokoll",
+      "copyright": "© {year} J.CAESAR AUTONOMY.",
+      "links": {
+        "privacy": "Datenschutz",
+        "terms": "Nutzungsbedingungen",
+        "sla": "Architektur-SLA"
+      }
+    }
+  }
+}

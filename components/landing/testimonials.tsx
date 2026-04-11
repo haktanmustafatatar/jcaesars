@@ -1,37 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-const testimonials = [
-  {
-    quote:
-      "J.Caesar Agent transformed our customer support. Response times dropped 80% and customer satisfaction is at an all-time high.",
-    author: "Sarah Chen",
-    role: "CTO at TechFlow",
-    initials: "SC",
-  },
-  {
-    quote:
-      "The easiest chatbot builder I've ever used. Set up in 10 minutes, and it actually understands our product.",
-    author: "Marcus Johnson",
-    role: "Founder of StartupXYZ",
-    initials: "MJ",
-  },
-  {
-    quote:
-      "We trained it on our entire documentation. Now it answers 90% of questions without human intervention.",
-    author: "Emily Rodriguez",
-    role: "Head of Support at CloudScale",
-    initials: "ER",
-  },
-];
+import { useTranslations } from "next-intl";
 
 export function Testimonials() {
   const [current, setCurrent] = useState(0);
+  const t = useTranslations("Landing.Testimonials");
+
+  const testimonials = useMemo(() => [
+    {
+      quote: t("items.0.quote"),
+      author: t("items.0.author"),
+      role: t("items.0.role"),
+      initials: "SC",
+    },
+    {
+      quote: t("items.1.quote"),
+      author: t("items.1.author"),
+      role: t("items.1.role"),
+      initials: "MJ",
+    },
+    {
+      quote: t("items.2.quote"),
+      author: t("items.2.author"),
+      role: t("items.2.role"),
+      initials: "ER",
+    },
+  ], [t]);
 
   const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
   const prev = () =>
@@ -48,7 +47,7 @@ export function Testimonials() {
             viewport={{ once: true }}
             className="text-sm font-medium text-primary mb-4 tracking-wider uppercase"
           >
-            Customer Stories
+            {t("badge")}
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -58,7 +57,7 @@ export function Testimonials() {
             className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight"
             style={{ fontFamily: "var(--font-fraunces)" }}
           >
-            Loved by Teams Worldwide
+            {t("title")}
           </motion.h2>
         </div>
 
