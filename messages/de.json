@@ -65,6 +65,62 @@
           "ui": "Agenten-UI",
           "personality": "Persönlichkeit",
           "deploy": "Bereitstellen"
+        },
+        "wizard": {
+          "ui": {
+            "title": "Agent-Oberfläche",
+            "subtitle": "Passen Sie das Aussehen und Verhalten Ihres KI-Agenten auf Ihrer Website an.",
+            "namePlaceholder": "Mein KI-Agent",
+            "nameLabel": "Chatbot-Name",
+            "welcomeLabel": "Willkommensnachricht",
+            "welcomePlaceholder": "Hallo! Wie kann ich Ihnen helfen?",
+            "appearanceLabel": "Erscheinungsbild",
+            "colorLabel": "Primärfarbe",
+            "headerColorLabel": "Primärfarbe für Kopfzeile verwenden",
+            "livePreview": "Live-Vorschau",
+            "typeMessage": "Nachricht eingeben...",
+            "next": "Sieht gut aus",
+            "back": "Zurück"
+          },
+          "personality": {
+            "title": "Persönlichkeit des Agenten",
+            "subtitle": "Optimieren Sie, wie Ihre KI mit Benutzern interagiert und welches Modell sie verwendet.",
+            "modelLabel": "Modellauswahl",
+            "gpt4oDesc": "Fortgeschrittenes Denken und hochwertige Antworten.",
+            "gpt4oMiniDesc": "Blitzschnelle Antworten, ideal für einfache FAQs.",
+            "styleLabel": "Agentenstil",
+            "instructionsLabel": "Anweisungen / Ziel",
+            "regenerate": "Neu generieren",
+            "instructionsPlaceholder": "Fügen Sie detaillierte Anweisungen für den Agenten ein oder schreiben Sie diese...",
+            "instructionsHint": "Diese Anweisungen definieren die Persönlichkeit des Agenten und wie er Benutzeranfragen basierend auf Ihren Quellen bearbeitet.",
+            "back": "Zurück",
+            "confirm": "Einstellungen bestätigen",
+            "launching": "Wird gestartet..."
+          },
+          "deploy": {
+            "trainingComplete": "Ihr Agent hat volle Intelligenz erreicht!",
+            "training": "Der Verstand Ihres Agenten wird geschärft...",
+            "trainingCompleteDesc": "Training abgeschlossen. Ihr Agent ist bereit, sofortige Antworten zu geben.",
+            "trainingDesc": "Wir verarbeiten Ihre Quellen und generieren intelligente Embeddings.",
+            "progress": "Fortschritt",
+            "chunksIndexed": "{count} Segmente indexiert",
+            "active": "Aktiv und bereit",
+            "initializing": "Intelligenz wird initialisiert...",
+            "dashboardBtn": "Dashboard",
+            "embedBtn": "Einbettungscode",
+            "timeNote": "Dieser Vorgang dauert je nach Websitegröße in der Regel 2-5 Minuten."
+          },
+          "modal": {
+            "websiteTitle": "Website-Quellen",
+            "websiteSubtitle": "Verbinden Sie das Wissen Ihrer Website",
+            "tabCrawl": "Links crawlen",
+            "tabSitemap": "Sitemap",
+            "tabManual": "Einzelner Link",
+            "urlLabel": "Ziel-Website-URL",
+            "fetching": "WIRD ABGERUFEN...",
+            "fetchLinks": "LINKS ABRUFEN",
+            "advancedOptions": "Erweiterte Optionen"
+          }
         }
       }
     }

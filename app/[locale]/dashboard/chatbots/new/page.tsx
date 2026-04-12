@@ -747,32 +747,32 @@ export default function NewChatbotPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 min-h-[600px] items-start">
             <div className="space-y-8">
               <div className="space-y-3">
-                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">Agent's UI</h2>
-                <p className="text-zinc-500 font-medium">Customize how your AI agent looks and behaves on your website.</p>
+                <h2 className="text-4xl font-bold tracking-tight text-zinc-950">{t("wizard.ui.title")}</h2>
+                <p className="text-zinc-500 font-medium">{t("wizard.ui.subtitle")}</p>
               </div>
 
               <div className="space-y-6 bg-white p-8 border rounded-[32px] shadow-sm">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold text-zinc-600">Chatbot name</Label>
+                    <Label className="text-sm font-bold text-zinc-600">{t("wizard.ui.nameLabel")}</Label>
                     <Input 
-                      placeholder="My AI Agent" 
+                      placeholder={t("wizard.ui.namePlaceholder")} 
                       className="h-12 rounded-xl border-zinc-100 bg-zinc-50/50 focus:bg-white transition-all shadow-none"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold text-zinc-600">Welcome message</Label>
+                    <Label className="text-sm font-bold text-zinc-600">{t("wizard.ui.welcomeLabel")}</Label>
                     <Input 
-                      placeholder="Hi! How can I help you today?" 
+                      placeholder={t("wizard.ui.welcomePlaceholder")} 
                       className="h-12 rounded-xl border-zinc-100 bg-zinc-50/50 focus:bg-white transition-all shadow-none"
                       value={formData.welcomeMessage}
                       onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
                     />
                   </div>
                   <div className="space-y-4">
-                    <Label className="text-sm font-bold text-zinc-600">Appearance</Label>
+                    <Label className="text-sm font-bold text-zinc-600">{t("wizard.ui.appearanceLabel")}</Label>
                     <div className="flex items-center gap-2">
                       <div 
                         onClick={() => setFormData({ ...formData, appearance: "light" })}
@@ -789,7 +789,7 @@ export default function NewChatbotPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <Label className="text-sm font-bold text-zinc-600">Primary color</Label>
+                    <Label className="text-sm font-bold text-zinc-600">{t("wizard.ui.colorLabel")}</Label>
                     <div className="flex items-center gap-4">
                       <div 
                         className="w-12 h-12 rounded-xl border shadow-sm cursor-pointer shrink-0" 
@@ -821,7 +821,7 @@ export default function NewChatbotPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between py-2">
-                    <Label className="text-sm font-bold text-zinc-600">Use primary color for header</Label>
+                    <Label className="text-sm font-bold text-zinc-600">{t("wizard.ui.headerColorLabel")}</Label>
                     <div 
                       onClick={() => setFormData({ ...formData, usePrimaryColorForHeader: !formData.usePrimaryColorForHeader })}
                       className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-all ${formData.usePrimaryColorForHeader ? "bg-emerald-500" : "bg-zinc-200"}`}
@@ -832,9 +832,9 @@ export default function NewChatbotPage() {
                 </div>
 
                 <div className="pt-8 flex items-center justify-between border-t border-zinc-50">
-                   <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">Back</Button>
+                   <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">{t("wizard.ui.back")}</Button>
                    <Button onClick={handleNext} className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl h-12 px-8 font-bold">
-                     Looks good
+                     {t("wizard.ui.next")}
                    </Button>
                 </div>
               </div>
@@ -843,7 +843,7 @@ export default function NewChatbotPage() {
             {/* Live Preview Sidebar (Mac Chrome style) */}
             <div className="sticky top-8 space-y-4">
               <div className="flex items-center justify-between px-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Live preview</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{t("wizard.ui.livePreview")}</span>
               </div>
               <div className="bg-zinc-100/30 rounded-[40px] p-8 border border-zinc-100/50 relative aspect-[3/4] overflow-hidden flex flex-col group">
                 {/* Dotted Grid Background */}
@@ -879,7 +879,7 @@ export default function NewChatbotPage() {
                   </div>
                   <div className={`p-4 border-t flex gap-2 ${formData.appearance === "dark" ? "bg-zinc-900 border-zinc-800" : "bg-white"}`}>
                      <div className={`flex-1 h-10 rounded-full border px-4 flex items-center ${formData.appearance === "dark" ? "bg-zinc-800 border-zinc-700" : "bg-zinc-50 border-zinc-100"}`}>
-                        <span className="text-xs text-zinc-400">Type a message...</span>
+                        <span className="text-xs text-zinc-400">{t("wizard.ui.typeMessage")}</span>
                      </div>
                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg shrink-0" style={{ backgroundColor: formData.primaryColor }}>
                         <Send className="w-4 h-4" />
@@ -894,14 +894,14 @@ export default function NewChatbotPage() {
         {currentStep === "personality" && (
           <div className="max-w-3xl mx-auto space-y-12 pb-24">
             <div className="space-y-3 text-center">
-              <h2 className="text-4xl font-black tracking-tight text-zinc-950">Agent's Personality</h2>
-              <p className="text-zinc-500 font-medium">Fine-tune how your AI interacts with users and which model it uses.</p>
+              <h2 className="text-4xl font-black tracking-tight text-zinc-950">{t("wizard.personality.title")}</h2>
+              <p className="text-zinc-500 font-medium">{t("wizard.personality.subtitle")}</p>
             </div>
 
             <div className="space-y-10">
               {/* Model Selection */}
               <div className="space-y-4">
-                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">Model selection</Label>
+                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">{t("wizard.personality.modelLabel")}</Label>
                  <div className="grid grid-cols-2 gap-4">
                     <div 
                       onClick={() => setFormData({ ...formData, model: "GPT-4o" })}
@@ -911,7 +911,7 @@ export default function NewChatbotPage() {
                          <span className="font-black text-sm tracking-tight">GPT-4o</span>
                          <Check className={`w-4 h-4 ${formData.model === "GPT-4o" ? "text-white" : "text-transparent"}`} />
                        </div>
-                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o" ? "text-zinc-400" : "text-zinc-400"}`}>Advanced reasoning and high-quality responses.</p>
+                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o" ? "text-zinc-400" : "text-zinc-400"}`}>{t("wizard.personality.gpt4oDesc")}</p>
                     </div>
                     <div 
                       onClick={() => setFormData({ ...formData, model: "GPT-4o-mini" })}
@@ -921,14 +921,14 @@ export default function NewChatbotPage() {
                          <span className="font-black text-sm tracking-tight">GPT-4o mini</span>
                          <Check className={`w-4 h-4 ${formData.model === "GPT-4o-mini" ? "text-white" : "text-transparent"}`} />
                        </div>
-                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o-mini" ? "text-zinc-400" : "text-zinc-400"}`}>Blazing fast responses, perfect for simple FAQs.</p>
+                       <p className={`text-[10px] font-bold leading-tight ${formData.model === "GPT-4o-mini" ? "text-zinc-400" : "text-zinc-400"}`}>{t("wizard.personality.gpt4oMiniDesc")}</p>
                     </div>
                  </div>
               </div>
 
               {/* Instruction Style (the 4 styles requested) */}
               <div className="space-y-4">
-                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">Agent style</Label>
+                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 pl-1">{t("wizard.personality.styleLabel")}</Label>
                  <div className="grid grid-cols-4 gap-3">
                    {personaPresets.map((style) => (
                      <div 
@@ -948,7 +948,7 @@ export default function NewChatbotPage() {
                {/* System Prompt (Editable) */}
               <div className="space-y-3">
                  <div className="flex items-center justify-between px-1">
-                    <Label className="text-xs font-black uppercase tracking-widest text-zinc-400">Instructions / Goal</Label>
+                    <Label className="text-xs font-black uppercase tracking-widest text-zinc-400">{t("wizard.personality.instructionsLabel")}</Label>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -956,28 +956,28 @@ export default function NewChatbotPage() {
                       onClick={() => generatePrompt(formData.useCase)}
                     >
                       <RefreshCw className="w-3 h-3" />
-                      Regenerate
+                      {t("wizard.personality.regenerate")}
                     </Button>
                  </div>
                  <Textarea 
-                    placeholder="Paste or write detailed instructions for the agent..."
+                    placeholder={t("wizard.personality.instructionsPlaceholder")}
                     className="min-h-[400px] rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white transition-all text-sm leading-relaxed p-8 shadow-inner"
                     value={formData.systemPrompt}
                     onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
                  />
-                 <p className="text-[11px] text-zinc-400 font-medium italic px-4">These instructions define the agent's persona and how it should handle user queries based on your sources.</p>
+                 <p className="text-[11px] text-zinc-400 font-medium italic px-4">{t("wizard.personality.instructionsHint")}</p>
               </div>
 
               <div className="pt-8 flex justify-between items-center bg-white p-8 rounded-[32px] border">
-                <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">Back</Button>
+                <Button variant="ghost" onClick={handlePrev} className="font-bold text-zinc-400 hover:text-zinc-950">{t("wizard.personality.back")}</Button>
                 <Button onClick={handleCreate} disabled={isCreating} className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-xl h-14 px-12 font-black text-lg shadow-2xl shadow-black/10">
                   {isCreating ? (
                     <div className="flex items-center gap-3">
                        <Loader2 className="w-5 h-5 animate-spin" />
-                       Launching...
+                       {t("wizard.personality.launching")}
                     </div>
                   ) : (
-                    "Confirm settings"
+                    t("wizard.personality.confirm")
                   )}
                 </Button>
               </div>
@@ -1004,21 +1004,21 @@ export default function NewChatbotPage() {
             
             <div className="space-y-4">
               <h2 className="text-5xl font-black tracking-tight text-zinc-950">
-                {isTrainingComplete ? "Your Agent reached full intelligence!" : "Sharpening your Agent's mind..."}
+                {isTrainingComplete ? t("wizard.deploy.trainingComplete") : t("wizard.deploy.training")}
               </h2>
               <p className="text-zinc-500 text-lg font-bold">
                 {isTrainingComplete 
-                  ? "Training is complete. Your agent is ready to provide instant answers." 
-                  : "We're currently processing your sources and generating smart embeddings."}
+                  ? t("wizard.deploy.trainingCompleteDesc")
+                  : t("wizard.deploy.trainingDesc")}
               </p>
             </div>
 
             {/* Progress Visualization */}
             <div className="p-8 bg-zinc-50/50 rounded-[40px] border border-zinc-100 space-y-6">
                <div className="flex justify-between items-center px-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 italic">Progress</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 italic">{t("wizard.deploy.progress")}</span>
                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-950">
-                    {trainingStatus?.documentCount || 0} Chunks Indexed
+                    {t("wizard.deploy.chunksIndexed", { count: trainingStatus?.documentCount || 0 })}
                   </span>
                </div>
                <div className="h-4 bg-zinc-100 rounded-full overflow-hidden shadow-inner flex">
@@ -1072,7 +1072,7 @@ export default function NewChatbotPage() {
                 </div>
                 <div>
                   <p className="font-black text-sm text-zinc-950">{formData.name || "AI Agent"}</p>
-                  <p className="text-xs font-bold text-zinc-400">{isTrainingComplete ? "Active & Ready" : "Initializing intelligence..."}</p>
+                  <p className="text-xs font-bold text-zinc-400">{isTrainingComplete ? t("wizard.deploy.active") : t("wizard.deploy.initializing")}</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -1083,7 +1083,7 @@ export default function NewChatbotPage() {
                    onClick={() => router.push(`/dashboard/chatbots`)}
                    disabled={!isTrainingComplete && !createdChatbotId}
                 >
-                  Dashboard
+                  {t("wizard.deploy.dashboardBtn")}
                 </Button>
                 <Button 
                   size="sm" 
@@ -1091,12 +1091,12 @@ export default function NewChatbotPage() {
                   onClick={() => router.push(`/dashboard/settings`)}
                   disabled={!isTrainingComplete}
                 >
-                  Embed code
+                  {t("wizard.deploy.embedBtn")}
                 </Button>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-400 font-bold italic pt-4">This process usually takes 2-5 minutes depending on your website size.</p>
+            <p className="text-xs text-zinc-400 font-bold italic pt-4">{t("wizard.deploy.timeNote")}</p>
           </div>
         )}
       </motion.div>
@@ -1115,8 +1115,8 @@ export default function NewChatbotPage() {
                   <Globe className="w-6 h-6 text-zinc-950" />
                 </div>
                 <div>
-                  <h3 className="font-black text-2xl tracking-tighter text-zinc-950">Website Sources</h3>
-                  <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Connect your site knowledge</p>
+                  <h3 className="font-black text-2xl tracking-tighter text-zinc-950">{t("wizard.modal.websiteTitle")}</h3>
+                  <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">{t("wizard.modal.websiteSubtitle")}</p>
                 </div>
               </div>
               <Button 
@@ -1131,9 +1131,9 @@ export default function NewChatbotPage() {
 
             <div className="px-10 py-4 bg-zinc-50/50 border-b flex gap-8">
                {[
-                 { id: 'crawl', label: 'Crawl links' },
-                 { id: 'sitemap', label: 'Sitemap' },
-                 { id: 'manual', label: 'Individual link' }
+                 { id: 'crawl', label: t("wizard.modal.tabCrawl") },
+                 { id: 'sitemap', label: t("wizard.modal.tabSitemap") },
+                 { id: 'manual', label: t("wizard.modal.tabManual") }
                ].map((tab) => (
                  <button
                    key={tab.id}
@@ -1150,7 +1150,7 @@ export default function NewChatbotPage() {
                 <div className="space-y-5">
                   <div className="flex gap-3">
                     <div className="flex-1 space-y-2">
-                       <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] pl-1">Target Website URL</Label>
+                       <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] pl-1">{t("wizard.modal.urlLabel")}</Label>
                        <div className="flex gap-2">
                           <Select defaultValue="https">
                             <SelectTrigger className="w-[120px] h-14 rounded-2xl bg-zinc-50 border-zinc-100 font-bold">
@@ -1178,10 +1178,10 @@ export default function NewChatbotPage() {
                         {isCrawling ? (
                           <div className="flex items-center gap-3">
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>FETCHING...</span>
+                            <span>{t("wizard.modal.fetching")}</span>
                           </div>
                         ) : (
-                          "FETCH LINKS"
+                          t("wizard.modal.fetchLinks")
                         )}
                       </Button>
                     </div>
@@ -1195,7 +1195,7 @@ export default function NewChatbotPage() {
                       onClick={() => setShowAdvancedData(!showAdvancedData)}
                     >
                       <ChevronRight className={`w-4 h-4 mr-2 transition-transform ${showAdvancedData ? 'rotate-90' : ''}`} />
-                      Advanced options
+                      {t("wizard.modal.advancedOptions")}
                     </Button>
                   </div>
                 </div>

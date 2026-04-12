@@ -69,30 +69,59 @@
           "deploy": "Canlıya Al"
         },
         "wizard": {
-          "intro": {
-            "title": "Bir bağlantı ile başlayalım",
-            "description": "Web sitenizin bağlantısını paylaşın, içeriğinizle eğitilmiş bir AI ajanını otomatik olarak oluşturalım.",
-            "urlLabel": "Web sitenizin URL'si",
-            "useCaseLabel": "Kullanım senaryosu",
-            "useCases": {
-              "general": "Genel AI ajan",
-              "sales": "Satış temsilcisi",
-              "support": "Destek temsilcisi"
-            },
-            "continue": "Devam Et",
-            "analyzing": "Marka renkleri alınıyor...",
-            "or": "Veya",
-            "manual": "Diğer kaynaklarla manuel kurulum yapın"
+          "ui": {
+            "title": "Ajanın Arayüzü",
+            "subtitle": "Yapay zeka ajanınızın web sitenizde nasıl görüneceğini ve davranacağını özelleştirin.",
+            "namePlaceholder": "Yapay Zeka Ajanım",
+            "nameLabel": "Chatbot adı",
+            "welcomeLabel": "Karşılama mesajı",
+            "welcomePlaceholder": "Merhaba! Size nasıl yardımcı olabilirim?",
+            "appearanceLabel": "Görünüm",
+            "colorLabel": "Birincil renk",
+            "headerColorLabel": "Başlık için birincil rengi kullan",
+            "livePreview": "Canlı önizleme",
+            "typeMessage": "Mesaj yazın...",
+            "next": "Harika görünüyor",
+            "back": "Geri"
           },
-          "sources": {
-            "title": "Eğitim kaynaklarını ekleyin",
-            "description": "Ajanınızı eğitmek için birden fazla kaynak ekleyebilirsiniz; bir dosya veya sitenize giden bir bağlantıyla başlayalım.",
-            "types": {
-              "file": "Dosya",
-              "text": "Metin",
-              "website": "Web Sitesi",
-              "qa": "Soru & Cevap"
-            }
+          "personality": {
+            "title": "Ajanın Kişiliği",
+            "subtitle": "Yapay zekanızın kullanıcılarla nasıl etkileşime geçtiğini ve hangi modeli kullandığını ince ayarlayın.",
+            "modelLabel": "Model seçimi",
+            "gpt4oDesc": "Gelişmiş akıl yürütme ve yüksek kaliteli yanıtlar.",
+            "gpt4oMiniDesc": "Yüksek hızlı yanıtlar, basit SSS için mükemmel.",
+            "styleLabel": "Ajan stili",
+            "instructionsLabel": "Talimatlar / Hedef",
+            "regenerate": "Yeniden oluştur",
+            "instructionsPlaceholder": "Ajan için ayrıntılı talimatlar yapıştırın veya yazın...",
+            "instructionsHint": "Bu talimatlar, ajanın kişiliğini ve kaynaklarınıza dayalı olarak kullanıcı sorgularını nasıl ele alacağını tanımlar.",
+            "back": "Geri",
+            "confirm": "Ayarları onayla",
+            "launching": "Başlatılıyor..."
+          },
+          "deploy": {
+            "trainingComplete": "Ajanınız tam zekaya ulaştı!",
+            "training": "Ajanınızın zihni keskinleştiriliyor...",
+            "trainingCompleteDesc": "Eğitim tamamlandı. Ajanınız anında yanıt vermeye hazır.",
+            "trainingDesc": "Kaynaklarınızı işliyor ve akıllı gömüler oluşturuyoruz.",
+            "progress": "İlerleme",
+            "chunksIndexed": "{count} Parça Dizine Eklendi",
+            "active": "Aktif ve Hazır",
+            "initializing": "Zeka başlatılıyor...",
+            "dashboardBtn": "Panel",
+            "embedBtn": "Gömme kodu",
+            "timeNote": "Bu işlem, web sitenizin boyutuna bağlı olarak genellikle 2-5 dakika sürer."
+          },
+          "modal": {
+            "websiteTitle": "Web Sitesi Kaynakları",
+            "websiteSubtitle": "Site bilginizi bağlayın",
+            "tabCrawl": "Bağlantıları tara",
+            "tabSitemap": "Site haritası",
+            "tabManual": "Tekil bağlantı",
+            "urlLabel": "Hedef Web Sitesi URL'si",
+            "fetching": "GETİRİLİYOR...",
+            "fetchLinks": "BAĞLANTILARI GETİR",
+            "advancedOptions": "Gelişmiş seçenekler"
           }
         }
       }

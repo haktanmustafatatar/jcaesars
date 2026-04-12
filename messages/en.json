@@ -69,30 +69,59 @@
           "deploy": "Deploy"
         },
         "wizard": {
-          "intro": {
-            "title": "Let's start with a link",
-            "description": "Share your website link, and we'll automatically build an AI agent trained on your content.",
-            "urlLabel": "Your website URL",
-            "useCaseLabel": "Use-case",
-            "useCases": {
-              "general": "General AI agent",
-              "sales": "Sales agent",
-              "support": "Support agent"
-            },
-            "continue": "Continue",
-            "analyzing": "Fetching brand colors...",
-            "or": "Or",
-            "manual": "Set up manually with other sources"
+          "ui": {
+            "title": "Agent's UI",
+            "subtitle": "Customize how your AI agent looks and behaves on your website.",
+            "namePlaceholder": "My AI Agent",
+            "nameLabel": "Chatbot name",
+            "welcomeLabel": "Welcome message",
+            "welcomePlaceholder": "Hi! How can I help you today?",
+            "appearanceLabel": "Appearance",
+            "colorLabel": "Primary color",
+            "headerColorLabel": "Use primary color for header",
+            "livePreview": "Live preview",
+            "typeMessage": "Type a message...",
+            "next": "Looks good",
+            "back": "Back"
           },
-          "sources": {
-            "title": "Add training sources",
-            "description": "You can add multiple sources to train your Agent; let's start with a file or a link to your site.",
-            "types": {
-              "file": "File",
-              "text": "Text",
-              "website": "Website",
-              "qa": "Q&A"
-            }
+          "personality": {
+            "title": "Agent's Personality",
+            "subtitle": "Fine-tune how your AI interacts with users and which model it uses.",
+            "modelLabel": "Model selection",
+            "gpt4oDesc": "Advanced reasoning and high-quality responses.",
+            "gpt4oMiniDesc": "Blazing fast responses, perfect for simple FAQs.",
+            "styleLabel": "Agent style",
+            "instructionsLabel": "Instructions / Goal",
+            "regenerate": "Regenerate",
+            "instructionsPlaceholder": "Paste or write detailed instructions for the agent...",
+            "instructionsHint": "These instructions define the agent's persona and how it should handle user queries based on your sources.",
+            "back": "Back",
+            "confirm": "Confirm settings",
+            "launching": "Launching..."
+          },
+          "deploy": {
+            "trainingComplete": "Your Agent reached full intelligence!",
+            "training": "Sharpening your Agent's mind...",
+            "trainingCompleteDesc": "Training is complete. Your agent is ready to provide instant answers.",
+            "trainingDesc": "We're currently processing your sources and generating smart embeddings.",
+            "progress": "Progress",
+            "chunksIndexed": "{count} Chunks Indexed",
+            "active": "Active & Ready",
+            "initializing": "Initializing intelligence...",
+            "dashboardBtn": "Dashboard",
+            "embedBtn": "Embed code",
+            "timeNote": "This process usually takes 2-5 minutes depending on your website size."
+          },
+          "modal": {
+            "websiteTitle": "Website Sources",
+            "websiteSubtitle": "Connect your site knowledge",
+            "tabCrawl": "Crawl links",
+            "tabSitemap": "Sitemap",
+            "tabManual": "Individual link",
+            "urlLabel": "Target Website URL",
+            "fetching": "FETCHING...",
+            "fetchLinks": "FETCH LINKS",
+            "advancedOptions": "Advanced options"
           }
         }
       }

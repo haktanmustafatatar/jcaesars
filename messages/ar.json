@@ -65,6 +65,62 @@
           "ui": "واجهة العميل",
           "personality": "الشخصية",
           "deploy": "نشر"
+        },
+        "wizard": {
+          "ui": {
+            "title": "واجهة الوكيل",
+            "subtitle": "خصّص مظهر وكيل الذكاء الاصطناعي وسلوكه على موقعك.",
+            "namePlaceholder": "وكيل الذكاء الاصطناعي الخاص بي",
+            "nameLabel": "اسم الروبوت",
+            "welcomeLabel": "رسالة الترحيب",
+            "welcomePlaceholder": "مرحباً! كيف يمكنني مساعدتك؟",
+            "appearanceLabel": "المظهر",
+            "colorLabel": "اللون الأساسي",
+            "headerColorLabel": "استخدام اللون الأساسي للرأس",
+            "livePreview": "معاينة مباشرة",
+            "typeMessage": "اكتب رسالة...",
+            "next": "يبدو رائعاً",
+            "back": "رجوع"
+          },
+          "personality": {
+            "title": "شخصية الوكيل",
+            "subtitle": "ضبّط كيفية تفاعل الذكاء الاصطناعي مع المستخدمين والنموذج الذي يستخدمه.",
+            "modelLabel": "اختيار النموذج",
+            "gpt4oDesc": "استدلال متقدم وردود عالية الجودة.",
+            "gpt4oMiniDesc": "ردود سريعة، مثالية للأسئلة الشائعة البسيطة.",
+            "styleLabel": "أسلوب الوكيل",
+            "instructionsLabel": "التعليمات / الهدف",
+            "regenerate": "إعادة التوليد",
+            "instructionsPlaceholder": "الصق أو اكتب تعليمات مفصّلة للوكيل...",
+            "instructionsHint": "تُحدد هذه التعليمات شخصية الوكيل وكيفية تعامله مع استفسارات المستخدمين بناءً على مصادرك.",
+            "back": "رجوع",
+            "confirm": "تأكيد الإعدادات",
+            "launching": "جارٍ التشغيل..."
+          },
+          "deploy": {
+            "trainingComplete": "وصل وكيلك إلى الذكاء الكامل!",
+            "training": "يتم شحذ عقل وكيلك...",
+            "trainingCompleteDesc": "اكتمل التدريب. وكيلك جاهز لتقديم إجابات فورية.",
+            "trainingDesc": "نقوم بمعالجة مصادرك وإنشاء تضمينات ذكية.",
+            "progress": "التقدم",
+            "chunksIndexed": "{count} مقطع مفهرس",
+            "active": "نشط وجاهز",
+            "initializing": "جارٍ تهيئة الذكاء...",
+            "dashboardBtn": "لوحة التحكم",
+            "embedBtn": "كود التضمين",
+            "timeNote": "تستغرق هذه العملية عادةً من 2 إلى 5 دقائق حسب حجم موقعك."
+          },
+          "modal": {
+            "websiteTitle": "مصادر الموقع",
+            "websiteSubtitle": "ربط معرفة موقعك",
+            "tabCrawl": "زحف الروابط",
+            "tabSitemap": "خريطة الموقع",
+            "tabManual": "رابط فردي",
+            "urlLabel": "رابط URL الموقع الهدف",
+            "fetching": "جارٍ الجلب...",
+            "fetchLinks": "جلب الروابط",
+            "advancedOptions": "خيارات متقدمة"
+          }
         }
       }
     }

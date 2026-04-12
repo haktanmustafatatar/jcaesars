@@ -65,6 +65,62 @@
           "ui": "UI de l Agent",
           "personality": "Personnalité",
           "deploy": "Déployer"
+        },
+        "wizard": {
+          "ui": {
+            "title": "Interface de l'agent",
+            "subtitle": "Personnalisez l'apparence et le comportement de votre agent IA sur votre site.",
+            "namePlaceholder": "Mon Agent IA",
+            "nameLabel": "Nom du chatbot",
+            "welcomeLabel": "Message de bienvenue",
+            "welcomePlaceholder": "Bonjour ! Comment puis-je vous aider ?",
+            "appearanceLabel": "Apparence",
+            "colorLabel": "Couleur principale",
+            "headerColorLabel": "Utiliser la couleur principale pour l'en-tête",
+            "livePreview": "Aperçu en direct",
+            "typeMessage": "Tapez un message...",
+            "next": "Ça me convient",
+            "back": "Retour"
+          },
+          "personality": {
+            "title": "Personnalité de l'agent",
+            "subtitle": "Affinez la façon dont votre IA interagit avec les utilisateurs et le modèle qu'elle utilise.",
+            "modelLabel": "Sélection du modèle",
+            "gpt4oDesc": "Raisonnement avancé et réponses de haute qualité.",
+            "gpt4oMiniDesc": "Réponses ultra-rapides, parfait pour les FAQs simples.",
+            "styleLabel": "Style de l'agent",
+            "instructionsLabel": "Instructions / Objectif",
+            "regenerate": "Régénérer",
+            "instructionsPlaceholder": "Collez ou rédigez des instructions détaillées pour l'agent...",
+            "instructionsHint": "Ces instructions définissent la personnalité de l'agent et la façon dont il traite les requêtes basées sur vos sources.",
+            "back": "Retour",
+            "confirm": "Confirmer les paramètres",
+            "launching": "Lancement..."
+          },
+          "deploy": {
+            "trainingComplete": "Votre agent a atteint son plein potentiel !",
+            "training": "L'esprit de votre agent s'affûte...",
+            "trainingCompleteDesc": "L'entraînement est terminé. Votre agent est prêt à fournir des réponses instantanées.",
+            "trainingDesc": "Nous traitons vos sources et générons des embeddings intelligents.",
+            "progress": "Progression",
+            "chunksIndexed": "{count} segments indexés",
+            "active": "Actif et prêt",
+            "initializing": "Initialisation de l'intelligence...",
+            "dashboardBtn": "Tableau de bord",
+            "embedBtn": "Code d'intégration",
+            "timeNote": "Ce processus prend généralement 2 à 5 minutes selon la taille de votre site."
+          },
+          "modal": {
+            "websiteTitle": "Sources du site",
+            "websiteSubtitle": "Connectez les connaissances de votre site",
+            "tabCrawl": "Explorer les liens",
+            "tabSitemap": "Plan du site",
+            "tabManual": "Lien individuel",
+            "urlLabel": "URL du site cible",
+            "fetching": "RÉCUPÉRATION...",
+            "fetchLinks": "RÉCUPÉRER LES LIENS",
+            "advancedOptions": "Options avancées"
+          }
         }
       }
     }
