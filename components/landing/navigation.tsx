@@ -132,6 +132,12 @@ export function Navigation() {
                 </Link>
               ))}
               <hr className="border-black/[0.05]" />
+              {/* Language Switcher — Mobile */}
+              <div className="pt-1">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Dil / Language</p>
+                <LanguageSwitcher />
+              </div>
+              <hr className="border-black/[0.05]" />
               <div className="flex flex-col gap-3 pt-2">
                 <Link href="/sign-in" className="w-full">
                   <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-black/10">

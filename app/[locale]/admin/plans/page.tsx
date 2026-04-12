@@ -16,6 +16,7 @@ import {
   Coins,
   ShieldCheck,
   Zap,
+  Bot,
   MoreVertical,
   Settings2
 } from "lucide-react";
