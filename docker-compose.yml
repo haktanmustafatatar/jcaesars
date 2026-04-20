@@ -1,63 +1,61 @@
 version: '3.8'
 
 services:
+  # Next.js Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    container_name: jcaesar-app
+    restart: always
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/jcaesar
+      - DATABASE_URL=postgresql://jcaesar_user:jcaesar_password@db:5432/jcaesar_db
       - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
     depends_on:
-      - postgres
+      - db
       - redis
-    networks:
-      - jcaesar-network
 
-  postgres:
-    image: ankane/pgvector:latest
+  # Background Worker (Crawl & Social Channels)
+  worker:
+    build: .
+    container_name: jcaesar-worker
+    restart: always
+    command: npm run start:worker # Ensure this command is defined in package.json
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=jcaesar
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - DATABASE_URL=postgresql://jcaesar_user:jcaesar_password@db:5432/jcaesar_db
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  # Database: PostgreSQL + pgvector
+  db:
+    image: ankane/pgvector:latest
+    container_name: jcaesar-db
+    restart: always
+    environment:
+      - POSTGRES_DB=jcaesar_db
+      - POSTGRES_USER=jcaesar_user
+      - POSTGRES_PASSWORD=jcaesar_password
     ports:
       - "5432:5432"
-    networks:
-      - jcaesar-network
+    volumes:
+      - jcaesar_db_data:/var/lib/postgresql/data
 
+  # Redis for Queues
   redis:
     image: redis:7-alpine
-    volumes:
-      - redis_data:/data
+    container_name: jcaesar-redis
+    restart: always
     ports:
       - "6379:6379"
-    networks:
-      - jcaesar-network
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: npm run worker
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/jcaesar
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - jcaesar-network
+    volumes:
+      - jcaesar_redis_data:/data
 
 volumes:
-  postgres_data:
-  redis_data:
-
-networks:
-  jcaesar-network:
-    driver: bridge
+  jcaesar_db_data:
+  jcaesar_redis_data:
