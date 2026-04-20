@@ -123,6 +123,39 @@
           }
         }
       }
+    },
+    "channels": {
+      "title": "Omnichannel Sync",
+      "subtitle": "Connect your neural agent to social message streams",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "configure": "Configure",
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "pending": "Pending"
+      },
+      "setup": {
+        "title": "Webhook Setup",
+        "description": "To receive messages, configure the following Webhook URL in your Meta Developer Portal:",
+        "urlLabel": "Target Webhook URL",
+        "note": "Replace [type] with whatsapp, instagram, or messenger."
+      },
+      "modal": {
+        "whatsappTitle": "Connect WhatsApp Business",
+        "instagramTitle": "Connect Instagram DM",
+        "messengerTitle": "Connect Facebook Messenger",
+        "whatsappDesc": "Link your WhatsApp Business phone number using Meta Cloud API tokens.",
+        "instagramDesc": "Connect your Instagram Business account DMs to your AI agent.",
+        "messengerDesc": "Allow your agent to respond to Facebook Page messages.",
+        "tokenLabel": "Meta Access Token",
+        "phoneLabel": "Phone Number ID",
+        "pageLabel": "Page ID",
+        "verifyTokenTitle": "Verify Token",
+        "verifyTokenDesc": "Use this token in your Meta Developer Portal webhook settings:",
+        "submit": "Verify & Connect Channel"
+      }
     }
   },
   "Admin": {

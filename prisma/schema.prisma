@@ -119,6 +119,11 @@ model Chatbot {
   avatar          String?
   language        String   @default("tr")
   
+  // Widget Logic
+  widgetMode      WidgetMode @default(FLOAT)
+  collectLeads    Boolean    @default(false)
+  handoffEnabled  Boolean    @default(true)
+  
   // Status
   status          ChatbotStatus @default(DRAFT)
   isPublic        Boolean  @default(false)
@@ -169,7 +174,28 @@ model DataSource {
   updatedAt     DateTime       @updatedAt
   
   documents     Document[]
+  urls          DataSourceUrl[]
 }
+
+model DataSourceUrl {
+  id            String           @id @default(cuid())
+  dataSourceId  String
+  dataSource    DataSource       @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  
+  url           String
+  title         String?
+  charCount     Int?
+  status        DataSourceStatus @default(PENDING)
+  errorMessage  String?
+  
+  lastCrawledAt DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([dataSourceId, url])
+  @@index([dataSourceId])
+}
+
 
 model Document {
   id            String     @id @default(cuid())
@@ -379,6 +405,12 @@ enum SubscriptionStatus {
   PAUSED
 }
 
+enum WidgetMode {
+  FLOAT
+  POPUP
+  INLINE
+}
+
 enum ChatbotStatus {
   DRAFT
   TRAINING
@@ -426,6 +458,9 @@ enum ChannelType {
   EMAIL
   API
   ZAPIER
+  SHOPIFY
+  WOOCOMMERCE
+  GOOGLE_CALENDAR
 }
 
 enum ChannelStatus {
@@ -442,4 +477,5 @@ enum ActionType {
   WEBHOOK
   FORM
   LEAD_CAPTURE
+  GOOGLE_CALENDAR
 }

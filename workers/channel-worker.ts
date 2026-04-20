@@ -146,12 +146,123 @@ async function sendEmailMessage({
 export const channelWorker = new Worker(
   "channel",
   async (job) => {
-    const { type, channel, recipientId, message, chatbotId, conversationId } = job.data;
+    const { type, channel, recipientId, message: userMessage, chatbotId, conversationId: existingConversationId, platformMetadata } = job.data;
 
-    console.log(`[ChannelWorker] Processing job ${job.id} - ${channel}`);
+    console.log(`[ChannelWorker] Processing job ${job.id} - ${channel} (${type})`);
 
     try {
-      // Chatbot'un channel config'ini al
+      if (type === "inbound") {
+        // --- INBOUND MESSAGE PROCESSING ---
+        const chatbot = await prisma.chatbot.findUnique({
+          where: { id: chatbotId },
+        });
+
+        if (!chatbot) throw new Error(`Chatbot ${chatbotId} not found`);
+
+        // Get or Create Conversation
+        let conversation = await prisma.conversation.findFirst({
+          where: {
+            chatbotId,
+            channel: channel.toUpperCase() as any,
+            channelUserId: recipientId, // Inbound job puts senderId in recipientId slot
+            status: "ACTIVE"
+          },
+          orderBy: { createdAt: "desc" }
+        });
+
+        if (!conversation) {
+          conversation = await prisma.conversation.create({
+            data: {
+              chatbotId,
+              channel: channel.toUpperCase() as any,
+              channelUserId: recipientId,
+              aiEnabled: true,
+              status: "ACTIVE"
+            }
+          });
+        }
+
+        // If handoff is active (aiEnabled: false), skip AI response
+        if (!conversation.aiEnabled) {
+          console.log(`[ChannelWorker] Conversation ${conversation.id} has AI disabled. Skipping.`);
+          return { skipped: "handoff_active" };
+        }
+
+        // Save User Message
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            role: "USER",
+            content: userMessage,
+          }
+        });
+
+        // 1. Perform RAG Search
+        const { context, sources } = await performRAGSearch({
+          chatbotId,
+          query: userMessage,
+        });
+
+        // 2. Clear Chat History (last 10)
+        const history = await prisma.message.findMany({
+          where: { conversationId: conversation.id },
+          orderBy: { createdAt: "asc" },
+          take: 10
+        });
+
+        const formattedMessages = history.map(m => ({
+          role: m.role.toLowerCase() as "user" | "assistant" | "system",
+          content: m.content
+        }));
+
+        // 3. Generate AI Response
+        const { generateRAGResponse } = await import("@/lib/ai");
+        const aiResponse = await generateRAGResponse({
+          messages: formattedMessages,
+          model: (chatbot.model as any) || "gpt-4o",
+          systemPrompt: chatbot.systemPrompt,
+          context,
+          chatbotId,
+          conversationId: conversation.id
+        });
+
+        // 4. Send Response back to Channel
+        // Recursive call to ourselves but with 'outbound' type? 
+        // Or call sendMetaMessage directly for speed.
+        const channelConfig = await prisma.channel.findFirst({
+          where: { chatbotId, type: channel.toUpperCase() as any, status: "CONNECTED" }
+        });
+
+        if (!channelConfig) throw new Error("Channel configuration lost");
+        const config = channelConfig.config as any;
+
+        let sendResult;
+        if (["whatsapp", "instagram", "facebook"].includes(channel)) {
+          sendResult = await sendMetaMessage({
+            channel: channel as any,
+            recipientId,
+            message: aiResponse.text,
+            accessToken: config.accessToken
+          });
+        }
+        // ... handle other channels (telegram, slack) as needed
+
+        // 5. Save Assistant Message
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            role: "ASSISTANT",
+            content: aiResponse.text,
+            sources: sources as any,
+            promptTokens: aiResponse.usage.promptTokens,
+            completionTokens: aiResponse.usage.completionTokens
+          }
+        });
+
+        return { success: true, aiResponse: aiResponse.text };
+      }
+
+      // --- OUTBOUND MESSAGE PROCESSING (Existing) ---
       const channelConfig = await prisma.channel.findFirst({
         where: {
           chatbotId,

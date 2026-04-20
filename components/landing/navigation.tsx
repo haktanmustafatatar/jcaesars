@@ -8,6 +8,7 @@ import { Menu, X, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,14 +43,16 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center bg-white/30 backdrop-blur-sm rounded-3xl px-6 py-2 border border-white/20 shadow-sm">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-2xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-500 overflow-hidden relative">
-               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
-               <Zap className="w-5 h-5 text-white relative z-10 fill-white" />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="relative w-52 h-16 overflow-hidden transition-all duration-500 group-hover:scale-105">
+              <Image 
+                src="/logo.svg" 
+                alt="JCaesar Logo" 
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
-            <span className="text-xl font-black tracking-tighter text-zinc-900 uppercase">
-              J.CAESAR
-            </span>
           </Link>
 
           {/* Desktop Links */}

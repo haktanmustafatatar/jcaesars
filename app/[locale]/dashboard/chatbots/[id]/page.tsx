@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useChat } from "ai/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 export default function ChatbotDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const t = useTranslations("Dashboard.chatbotDetail");
   const id = params.id as string;
   
   const [chatbot, setChatbot] = useState<any>(null);
@@ -69,7 +71,7 @@ export default function ChatbotDetailPage() {
           {
             id: "welcome",
             role: "assistant",
-            content: data.welcomeMessage || "Hi! I'm your AI assistant. How can I help you today?",
+            content: data.welcomeMessage || t("defaultDescription"),
             createdAt: new Date(),
           },
         ]);
@@ -88,7 +90,7 @@ export default function ChatbotDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
-        <p className="text-zinc-500 font-medium animate-pulse text-sm uppercase tracking-widest">Synchronizing Mind...</p>
+        <p className="text-zinc-500 font-medium animate-pulse text-sm uppercase tracking-widest">{t("status.training")}...</p>
       </div>
     );
   }
@@ -120,10 +122,10 @@ export default function ChatbotDetailPage() {
                 }`}
                 variant="outline"
               >
-                {chatbot?.status === "ACTIVE" ? "Operational" : "Synchronizing"}
+                {chatbot?.status === "ACTIVE" ? t("status.active") : t("status.training")}
               </Badge>
             </div>
-            <p className="text-zinc-500 text-sm mt-1 font-medium max-w-md line-clamp-1">{chatbot?.description || "Autonomous AI Intelligence Unit"}</p>
+            <p className="text-zinc-500 text-sm mt-1 font-medium max-w-md line-clamp-1">{chatbot?.description || t("defaultDescription")}</p>
           </div>
         </div>
 
@@ -131,13 +133,13 @@ export default function ChatbotDetailPage() {
           <Link href={`/dashboard/chatbots/${id}/settings`}>
             <Button variant="outline" className="rounded-2xl h-12 px-6 border-zinc-200 hover:bg-zinc-50 font-bold text-zinc-600">
               <Settings className="w-4 h-4 mr-2" />
-              Settings
+              {t("settings")}
             </Button>
           </Link>
           <Link href={`/dashboard/chatbots/${id}/embed`}>
             <Button className="bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl h-12 px-6 font-bold shadow-lg shadow-black/10">
               <Code className="w-4 h-4 mr-2" />
-              Embed Code
+              {t("embedCode")}
             </Button>
           </Link>
         </div>
@@ -150,11 +152,11 @@ export default function ChatbotDetailPage() {
             <div className="p-6 border-b border-zinc-100/50 flex items-center justify-between bg-zinc-50/30">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Neural Network Live</span>
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t("liveStatus")}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setMessages([{ id: "welcome-"+Date.now(), role: "assistant", content: chatbot?.welcomeMessage || "Hello!", createdAt: new Date() }])} className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-primary">
                 <RefreshCw className="w-3 h-3 mr-2" />
-                Reset Forge
+                {t("resetForge")}
               </Button>
             </div>
 
@@ -210,7 +212,7 @@ export default function ChatbotDetailPage() {
               <form onSubmit={handleSubmit} className="relative group">
                 <Input
                   className="h-16 pl-6 pr-16 rounded-3xl bg-white border-2 border-zinc-100 focus:border-primary/30 transition-all font-medium text-zinc-700 shadow-sm"
-                  placeholder="Type your message to test Vareno AI..."
+                  placeholder={t("placeholder", { name: chatbot?.name || "Agent" })}
                   value={input}
                   onChange={handleInputChange}
                 />
@@ -222,7 +224,7 @@ export default function ChatbotDetailPage() {
                   <Send className="w-5 h-5" />
                 </Button>
               </form>
-              <p className="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-4">Powered by JCaesar Autonomous RAG Engine</p>
+              <p className="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-4">{t("poweredBy")}</p>
             </div>
           </Card>
         </div>
@@ -234,7 +236,7 @@ export default function ChatbotDetailPage() {
               <div>
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-6">
                   <Sparkles className="w-3 h-3" />
-                  Neural Configuration
+                  {t("configTitle")}
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl">
@@ -246,8 +248,8 @@ export default function ChatbotDetailPage() {
                     <span className="text-xs font-bold text-zinc-900">{chatbot?.temperature}</span>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl">
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Memory</span>
-                    <span className="text-xs font-bold text-zinc-900">active (RAG)</span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t("memoryLabel")}</span>
+                    <span className="text-xs font-bold text-zinc-900">{t("activeRAG")}</span>
                   </div>
                 </div>
               </div>
@@ -255,15 +257,15 @@ export default function ChatbotDetailPage() {
               <div className="pt-4">
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 mb-6">
                   <Info className="w-3 h-3" />
-                  Knowledge Base Stats
+                  {t("statsTitle")}
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-4 rounded-3xl border-2 border-zinc-50 bg-zinc-50/30">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Sources</p>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">{t("sourcesLabel")}</p>
                     <p className="text-xl font-black text-zinc-900">{chatbot?.dataSources?.length || 0}</p>
                   </div>
                   <div className="p-4 rounded-3xl border-2 border-zinc-50 bg-zinc-50/30">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Chats</p>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">{t("chatsLabel")}</p>
                     <p className="text-xl font-black text-zinc-900">{chatbot?._count?.conversations || 0}</p>
                   </div>
                 </div>
@@ -272,7 +274,7 @@ export default function ChatbotDetailPage() {
               <div className="pt-4">
                 <Button variant="outline" className="w-full rounded-2xl h-14 border-zinc-100 hover:bg-zinc-50 font-bold text-zinc-600 shadow-sm transition-all hover:scale-105 active:scale-95 group">
                   <BarChart3 className="w-4 h-4 mr-2 group-hover:text-primary" />
-                  View Detailed Analytics
+                  {t("viewAnalytics")}
                 </Button>
               </div>
             </div>
@@ -282,10 +284,10 @@ export default function ChatbotDetailPage() {
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-700">
               <Bot className="w-24 h-24" />
             </div>
-            <h4 className="text-lg font-bold mb-2">Need API Access?</h4>
-            <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-6">Connect your agent to third-party apps via our performant API infrastructure.</p>
+            <h4 className="text-lg font-bold mb-2">{t("needAPI")}</h4>
+            <p className="text-zinc-400 text-sm font-medium leading-relaxed mb-6">{t("apiDesc")}</p>
             <Button size="sm" className="bg-white text-zinc-900 hover:bg-zinc-100 rounded-xl px-6 font-bold">
-              Check Docs
+              {t("checkDocs")}
             </Button>
           </div>
         </div>

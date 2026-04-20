@@ -70,10 +70,16 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { type, url, name, content, fileUrl, fileType, fileSize } = body;
+    const { type, name, content, fileUrl, fileType, fileSize } = body;
+    let { url } = body;
 
     if (!type || !name) {
       return NextResponse.json({ error: "Type and name are required" }, { status: 400 });
+    }
+
+    // Normalize URL — auto-add https:// if missing
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
     }
 
     // Create Data Source

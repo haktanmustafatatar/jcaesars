@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Twitter, Linkedin, Github, Zap, ShieldCheck, Cpu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
+import Image from "next/image";
 
 export function Footer() {
   const t = useTranslations("Landing.Footer");
@@ -42,11 +43,14 @@ export function Footer() {
           {/* Brand Identity */}
           <div className="col-span-2 space-y-8">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-110 transition-all duration-500 overflow-hidden relative">
-                 <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
-                 <Zap className="w-6 h-6 text-white relative z-10 fill-white" />
+              <div className="relative w-64 h-20 overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <Image 
+                  src="/logo.svg" 
+                  alt="JCaesar Logo" 
+                  fill
+                  className="object-contain"
+                />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-zinc-900 uppercase">J.CAESAR</span>
             </Link>
             <p className="text-zinc-500 font-medium text-sm leading-relaxed max-w-xs">
               {t("description")}

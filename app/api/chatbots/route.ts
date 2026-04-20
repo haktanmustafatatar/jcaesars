@@ -120,12 +120,12 @@ export async function POST(req: NextRequest) {
                 }]
               }
             }] : []),
-            ...(qnaList && qnaList.length > 0 ? [{
+            ...(qnaList && qnaList.filter((qa: any) => qa.question.trim() !== "").length > 0 ? [{
               type: "QNA" as any,
               name: "Q&A Source",
               status: "COMPLETED" as any,
               documents: {
-                create: qnaList.map((qa: any) => ({
+                create: qnaList.filter((qa: any) => qa.question.trim() !== "").map((qa: any) => ({
                   content: `Question: ${qa.question}\nAnswer: ${qa.answer}`,
                   title: qa.question.substring(0, 50),
                 }))

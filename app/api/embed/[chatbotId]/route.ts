@@ -22,6 +22,8 @@ export async function GET(
         showBranding: true,
         status: true,
         isPublic: true,
+        collectLeads: true,
+        handoffEnabled: true,
       },
     });
 
@@ -57,7 +59,7 @@ export async function POST(
   try {
     const { chatbotId } = await params;
     const body = await req.json();
-    const { message, conversationId } = body;
+    const { message, conversationId, name, email } = body;
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -87,7 +89,20 @@ export async function POST(
         data: {
           chatbotId: chatbot.id,
           channel: "widget",
+          metadata: (name || email) ? { name, email } : undefined,
         },
+      });
+    } else if (name || email) {
+      // Update existing conversation with lead info if provided
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { 
+          metadata: { 
+            ...(conversation.metadata as any || {}),
+            name, 
+            email 
+          } 
+        }
       });
     }
 
@@ -108,18 +123,11 @@ export async function POST(
     });
 
     // RAG: İlgili dokümanları ara
-    const relevantDocs = await searchDocuments({
-      query: message,
+    const { context, sources } = await performRAGSearch({
       chatbotId: chatbot.id,
+      query: message,
       limit: 5,
     });
-
-    // Context oluştur
-    const context = relevantDocs.length > 0
-      ? relevantDocs
-          .map((doc) => `Source: ${doc.title || doc.url || "Unknown"}\nContent: ${doc.content}`)
-          .join("\n\n---\n\n")
-      : "No specific context found for this query in the knowledge base.";
 
     // Mesajları formatla
     const messages = previousMessages.map((m) => ({
@@ -146,6 +154,8 @@ Please follow these instructions strictly:
       model: chatbot.model as LLMModel,
       systemPrompt: enhancedSystemPrompt,
       context,
+      chatbotId: chatbot.id,
+      conversationId: conversation.id,
       temperature: chatbot.temperature || 0.7,
       maxTokens: chatbot.maxTokens || 1000,
       onFinish: async (completion) => {
@@ -161,11 +171,7 @@ Please follow these instructions strictly:
             model: chatbot.model,
             promptTokens,
             completionTokens,
-            sources: relevantDocs.map((d) => ({
-              title: d.title,
-              url: d.url,
-              similarity: d.similarity,
-            })),
+            sources: sources as any,
           },
         });
 

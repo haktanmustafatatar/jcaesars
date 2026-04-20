@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * PATCH /api/conversations/[id]
+ * Updates conversation status, assignment, or AI autonomy (handoff)
+ */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { userId: clerkId } = await auth();
+
+    if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { aiEnabled, status, assignedTo } = body;
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id },
+      include: { chatbot: true }
+    });
+
+    if (!conversation) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    }
+
+    // Update conversation
+    const updated = await prisma.conversation.update({
+      where: { id },
+      data: {
+        ...(aiEnabled !== undefined && { aiEnabled }),
+        ...(status && { status }),
+        ...(assignedTo && { assignedTo })
+      }
+    });
+
+    // If manual takeover, record it in notes
+    if (aiEnabled === false) {
+      await prisma.conversationNote.create({
+        data: {
+          conversationId: id,
+          content: "Human agent took over the conversation manually.",
+          createdBy: clerkId
+        }
+      });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("[ConversationUpdate] Error:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}

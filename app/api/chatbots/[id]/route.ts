@@ -108,7 +108,8 @@ export async function PATCH(
     // Sanitize body to only include updatable fields
     const updatableFields = [
       "name", "description", "systemPrompt", "welcomeMessage", "avatar", 
-      "primaryColor", "model", "temperature", "maxTokens", "isPublic", "showBranding"
+      "primaryColor", "model", "temperature", "maxTokens", "isPublic", "showBranding",
+      "widgetMode"
     ];
     
     const data: any = {};

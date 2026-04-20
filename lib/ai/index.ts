@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamText, generateText, embed } from "ai";
+import { streamText, generateText, embed, ToolSet } from "ai";
+import { getChatbotTools } from "./tools";
 import { prisma } from "@/lib/prisma";
 
 // LLM Model yapılandırması
@@ -89,6 +90,8 @@ export async function streamRAGResponse({
   temperature?: number;
   maxTokens?: number;
   onFinish?: (completion: { text: string; usage: any }) => Promise<void> | void;
+  chatbotId?: string;
+  conversationId?: string;
 }) {
   const selectedModel = LLM_MODELS[model]?.provider || LLM_MODELS["gpt-4o"].provider;
 
@@ -102,6 +105,9 @@ If the context doesn't contain the requested information, say so honestly, but t
 Knowledge Hub Context:
 ${context}`;
 
+  // Fetch tools if chatbotId is provided
+  const tools = chatbotId ? await getChatbotTools(chatbotId) : {};
+
   return streamText({
     model: selectedModel,
     messages: [
@@ -110,7 +116,57 @@ ${context}`;
     ],
     temperature,
     maxTokens,
+    tools,
+    maxSteps: 5, // Allow tool-calling logic
     onFinish,
+  });
+}
+
+// RAG ile chat yanıtı (non-streaming, direct generation)
+export async function generateRAGResponse({
+  messages,
+  model,
+  systemPrompt,
+  context,
+  temperature = 0.7,
+  maxTokens = 1000,
+  chatbotId,
+}: {
+  messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+  model: LLMModel;
+  systemPrompt: string;
+  context: string;
+  temperature?: number;
+  maxTokens?: number;
+  maxTokens?: number;
+  chatbotId?: string;
+  conversationId?: string;
+}) {
+  const selectedModel = LLM_MODELS[model]?.provider || LLM_MODELS["gpt-4o"].provider;
+
+  const enhancedSystemPrompt = `${systemPrompt}
+
+IMPORTANT: Use the following context to answer the user's question accurately. 
+Pay special attention to numerical values, prices, dates, and specific product details. 
+If the context contains a price for a product the user is asking about, YOU MUST include it.
+If the context doesn't contain the requested information, say so honestly, but try to provide a close alternative if possible.
+
+Knowledge Hub Context:
+${context}`;
+
+  // Fetch tools if chatbotId is provided
+  const tools = chatbotId ? await getChatbotTools(chatbotId) : {};
+
+  return generateText({
+    model: selectedModel,
+    messages: [
+      { role: "system", content: enhancedSystemPrompt },
+      ...messages,
+    ],
+    temperature,
+    maxTokens,
+    tools,
+    maxSteps: 5,
   });
 }
 
@@ -203,4 +259,57 @@ async function checkTokenLimit(userId: string) {
   if (usedTokens >= limit) {
     throw new Error("TOKEN_LIMIT_EXCEEDED");
   }
+}
+
+// RAG Araştırması (pgvector)
+export async function performRAGSearch({
+  chatbotId,
+  query,
+  limit = 5,
+  minSimilarity = 0.5,
+}: {
+  chatbotId: string;
+  query: string;
+  limit?: number;
+  minSimilarity?: number;
+}) {
+  const embedding = await createEmbedding(query);
+  const vectorString = `[${embedding.join(",")}]`;
+
+  const chatbot = await prisma.chatbot.findUnique({
+    where: { id: chatbotId },
+    include: {
+      dataSources: {
+        where: { status: "COMPLETED" },
+      },
+    },
+  });
+
+  if (!chatbot || chatbot.dataSources.length === 0) {
+    return { context: "", sources: [] };
+  }
+
+  const dataSourceIds = chatbot.dataSources.map((ds) => ds.id);
+
+  const documents: any[] = await prisma.$queryRaw`
+    SELECT content, title, url, 1 - (embedding <=> ${vectorString}::vector) as similarity
+    FROM "Document"
+    WHERE "dataSourceId" = ANY(${dataSourceIds})
+    ORDER BY similarity DESC
+    LIMIT ${limit}
+  `;
+
+  const filteredDocs = documents.filter((doc) => doc.similarity >= minSimilarity);
+
+  const context = filteredDocs
+    .map((doc) => `Source: ${doc.title || doc.url || "Untitled"}\nContent: ${doc.content}`)
+    .join("\n\n---\n\n");
+
+  const sources = filteredDocs.map((doc) => ({
+    title: doc.title,
+    url: doc.url,
+    similarity: doc.similarity,
+  }));
+
+  return { context, sources };
 }

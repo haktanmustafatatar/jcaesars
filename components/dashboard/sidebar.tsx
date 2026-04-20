@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -44,16 +45,20 @@ export function DashboardSidebar() {
           <Link
             href="/dashboard"
             className={cn(
-              "flex items-center gap-3",
+              "flex items-center gap-3 w-full",
               collapsed && "justify-center"
             )}
           >
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              <Bot className="w-6 h-6 text-white" />
+            <div className={cn("relative overflow-hidden transition-all duration-500", 
+              collapsed ? "w-12 h-12" : "w-52 h-16"
+            )}>
+              <Image 
+                src="/logo.svg" 
+                alt="JCaesar Logo" 
+                fill
+                className="object-contain object-left"
+              />
             </div>
-            {!collapsed && (
-              <span className="font-semibold text-lg italic tracking-tight">J.Caesar</span>
-            )}
           </Link>
           <Button
             variant="ghost"

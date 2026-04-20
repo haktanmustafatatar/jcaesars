@@ -69,6 +69,27 @@
           "deploy": "Canlıya Al"
         },
         "wizard": {
+          "intro": {
+            "title": "Ajanını İnşa Et",
+            "description": "Web sitenizi analiz edelim ve saniyeler içinde özel bir yapay zeka deneyimi oluşturalım.",
+            "urlLabel": "Web Siteniz",
+            "useCaseLabel": "Kullanım Amacı",
+            "useCases": {
+              "general": "Genel Yardımcı",
+              "sales": "Satış Ajanı",
+              "support": "Müşteri Desteği"
+            },
+            "analyzing": "Analiz Ediliyor...",
+            "continue": "Devam Et",
+            "or": "VEYA",
+            "manual": "Manuel Kaynak Ekle",
+            "analysis": {
+              "logo": "Logo getiriliyor",
+              "color": "Marka rengi getiriliyor",
+              "links": "Bağlantılar getiriliyor",
+              "prompt": "Prompt ayarlanıyor"
+            }
+          },
           "ui": {
             "title": "Ajanın Arayüzü",
             "subtitle": "Yapay zeka ajanınızın web sitenizde nasıl görüneceğini ve davranacağını özelleştirin.",
@@ -102,6 +123,7 @@
           "deploy": {
             "trainingComplete": "Ajanınız tam zekaya ulaştı!",
             "training": "Ajanınızın zihni keskinleştiriliyor...",
+            "trainingShort": "Eğitiliyor...",
             "trainingCompleteDesc": "Eğitim tamamlandı. Ajanınız anında yanıt vermeye hazır.",
             "trainingDesc": "Kaynaklarınızı işliyor ve akıllı gömüler oluşturuyoruz.",
             "progress": "İlerleme",
@@ -111,6 +133,21 @@
             "dashboardBtn": "Panel",
             "embedBtn": "Gömme kodu",
             "timeNote": "Bu işlem, web sitenizin boyutuna bağlı olarak genellikle 2-5 dakika sürer."
+          },
+          "sources": {
+            "title": "Bilgi Kaynakları",
+            "description": "Yapay zeka ajanınızı eğitmek için kullanmak istediğiniz kaynakları seçin.",
+            "types": {
+              "file": "Dosyalar",
+              "text": "Metin",
+              "website": "Web Sitesi",
+              "qa": "Soru & Cevap"
+            },
+            "next": "Eğit ve devam et",
+            "back": "Geri",
+            "summary": "Kaynak Özeti",
+            "totalSize": "Toplam boyut",
+            "noSources": "Henüz kaynak eklenmedi"
           },
           "modal": {
             "websiteTitle": "Web Sitesi Kaynakları",
@@ -150,7 +187,73 @@
         "title": "Son Konuşmalar",
         "viewAll": "Hepsini Gör"
       }
+    },
+    "channels": {
+      "title": "Çok Kanallı Senkronizasyon",
+      "subtitle": "Yapay zeka ajanınızı sosyal medya mesaj akışlarına bağlayın",
+      "tabLabel": "Kanallar",
+      "connect": "Bağlan",
+      "disconnect": "Bağlantıyı Kes",
+      "configure": "Yapılandır",
+      "status": {
+        "connected": "Bağlı",
+        "disconnected": "Bağlı Değil",
+        "error": "Hata",
+        "pending": "Beklemede"
+      },
+      "setup": {
+        "title": "Webhook Kurulumu",
+        "description": "Mesajları almak için Meta Geliştirici Portalınızda aşağıdaki Webhook URL'sini yapılandırın:",
+        "urlLabel": "Hedef Webhook URL'si",
+        "note": "[type] yerine whatsapp, instagram veya messenger yazın."
+      },
+      "modal": {
+        "whatsappTitle": "WhatsApp Business Bağla",
+        "instagramTitle": "Instagram DM Bağla",
+        "messengerTitle": "Facebook Messenger Bağla",
+        "whatsappDesc": "Meta Cloud API token'larını kullanarak WhatsApp Business numaranızı bağlayın.",
+        "instagramDesc": "Instagram İşletme hesabı DM'lerinizi yapay zeka ajanınıza bağlayın.",
+        "messengerDesc": "Ajanınızın Facebook Sayfası mesajlarına yanıt vermesini sağlayın.",
+        "tokenLabel": "Meta Erişim Token'ı",
+        "phoneLabel": "Telefon Numarası ID",
+        "pageLabel": "Sayfa ID",
+        "verifyTokenTitle": "Doğrulama Token'ı",
+        "verifyTokenDesc": "Bu token'ı Meta Geliştirici Portalı webhook ayarlarında kullanın:",
+        "submit": "Doğrula ve Kanalı Bağla"
+      }
+    },
+    "chatbotDetail": {
+      "status": {
+        "active": "Operasyonel",
+        "training": "Senkronize Ediliyor"
+      },
+      "defaultDescription": "Otonom Yapay Zeka Zeka Birimi",
+      "settings": "Ayarlar",
+      "embedCode": "Gömme Kodu",
+      "liveStatus": "Neural Ağ Canlı",
+      "resetForge": "Demirhaneyi Sıfırla",
+      "placeholder": "{name} Yapay Zekasını test etmek için mesaj yazın...",
+      "poweredBy": "JCaesar Otonom RAG Motoru ile Güçlendirilmiştir",
+      "configTitle": "Neural Yapılandırma",
+      "memoryLabel": "Hafıza",
+      "activeRAG": "aktif (RAG)",
+      "statsTitle": "Bilgi Tabanı İstatistikleri",
+      "sourcesLabel": "Kaynaklar",
+      "chatsLabel": "Sohbetler",
+      "viewAnalytics": "Detaylı Analizleri Görüntüle",
+      "needAPI": "API Erişimi Gerekiyor mu?",
+      "apiDesc": "Ajanınızı yüksek performanslı API altyapımız aracılığıyla üçüncü taraf uygulamalara bağlayın.",
+      "checkDocs": "Dokümanları Kontrol Et"
     }
+  },
+  "Widget": {
+    "welcomeDefault": "Merhaba! Size nasıl yardımcı olabilirim?",
+    "assistantTitle": "Yapay Zeka Asistanı",
+    "online": "Çevrimiçi",
+    "you": "Siz",
+    "placeholder": "Mesaj yazın...",
+    "poweredBy": "JCaesar Agent tarafından desteklenmektedir",
+    "aiLabel": "YZ"
   },
   "Admin": {
     "sidebar": {

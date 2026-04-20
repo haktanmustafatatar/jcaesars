@@ -256,7 +256,7 @@ export default function ChatbotsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-bold">Terminate Agent?</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-500 text-base font-medium py-2">
-              This action was irreversible. The chatbot's memory, data sources, and conversations will be permanently purged from the JCaesar infrastructure.
+              This action is irreversible. The chatbot's memory, data sources, and conversations will be permanently purged from the J.Caesar infrastructure.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">

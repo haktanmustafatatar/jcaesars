@@ -69,6 +69,27 @@
           "deploy": "Deploy"
         },
         "wizard": {
+          "intro": {
+            "title": "Build Your Agent",
+            "description": "Let's analyze your website and build a custom AI experience in seconds.",
+            "urlLabel": "Your Website",
+            "useCaseLabel": "Use Case",
+            "useCases": {
+              "general": "General Assistant",
+              "sales": "Sales Agent",
+              "support": "Customer Support"
+            },
+            "analyzing": "Analyzing...",
+            "continue": "Continue",
+            "or": "OR",
+            "manual": "Add Manually",
+            "analysis": {
+              "logo": "Fetching logo",
+              "color": "Fetching brand color",
+              "links": "Fetching links",
+              "prompt": "Adjusting prompt"
+            }
+          },
           "ui": {
             "title": "Agent's UI",
             "subtitle": "Customize how your AI agent looks and behaves on your website.",
@@ -102,6 +123,7 @@
           "deploy": {
             "trainingComplete": "Your Agent reached full intelligence!",
             "training": "Sharpening your Agent's mind...",
+            "trainingShort": "Training...",
             "trainingCompleteDesc": "Training is complete. Your agent is ready to provide instant answers.",
             "trainingDesc": "We're currently processing your sources and generating smart embeddings.",
             "progress": "Progress",
@@ -111,6 +133,21 @@
             "dashboardBtn": "Dashboard",
             "embedBtn": "Embed code",
             "timeNote": "This process usually takes 2-5 minutes depending on your website size."
+          },
+          "sources": {
+            "title": "Knowledge Sources",
+            "description": "Select the knowledge sources you want to use to train your AI agent.",
+            "types": {
+              "file": "Files",
+              "text": "Text",
+              "website": "Website",
+              "qa": "Q&A"
+            },
+            "next": "Train & continue",
+            "back": "Back",
+            "summary": "Sources Summary",
+            "totalSize": "Total size",
+            "noSources": "No sources added yet"
           },
           "modal": {
             "websiteTitle": "Website Sources",
@@ -150,7 +187,73 @@
         "title": "Recent Conversations",
         "viewAll": "View All"
       }
+    },
+    "channels": {
+      "title": "Omnichannel Sync",
+      "subtitle": "Connect your neural agent to social message streams",
+      "tabLabel": "Channels",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "configure": "Configure",
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "pending": "Pending"
+      },
+      "setup": {
+        "title": "Webhook Setup",
+        "description": "To receive messages, configure the following Webhook URL in your Meta Developer Portal:",
+        "urlLabel": "Target Webhook URL",
+        "note": "Replace [type] with whatsapp, instagram, or messenger."
+      },
+      "modal": {
+        "whatsappTitle": "Connect WhatsApp Business",
+        "instagramTitle": "Connect Instagram DM",
+        "messengerTitle": "Connect Facebook Messenger",
+        "whatsappDesc": "Link your WhatsApp Business phone number using Meta Cloud API tokens.",
+        "instagramDesc": "Connect your Instagram Business account DMs to your AI agent.",
+        "messengerDesc": "Allow your agent to respond to Facebook Page messages.",
+        "tokenLabel": "Meta Access Token",
+        "phoneLabel": "Phone Number ID",
+        "pageLabel": "Page ID",
+        "verifyTokenTitle": "Verify Token",
+        "verifyTokenDesc": "Use this token in your Meta Developer Portal webhook settings:",
+        "submit": "Verify & Connect Channel"
+      }
+    },
+    "chatbotDetail": {
+      "status": {
+        "active": "Operational",
+        "training": "Synchronizing"
+      },
+      "defaultDescription": "Autonomous AI Intelligence Unit",
+      "settings": "Settings",
+      "embedCode": "Embed Code",
+      "liveStatus": "Neural Network Live",
+      "resetForge": "Reset Forge",
+      "placeholder": "Type your message to test {name} AI...",
+      "poweredBy": "Powered by JCaesar Autonomous RAG Engine",
+      "configTitle": "Neural Configuration",
+      "memoryLabel": "Memory",
+      "activeRAG": "active (RAG)",
+      "statsTitle": "Knowledge Base Stats",
+      "sourcesLabel": "Sources",
+      "chatsLabel": "Chats",
+      "viewAnalytics": "View Detailed Analytics",
+      "needAPI": "Need API Access?",
+      "apiDesc": "Connect your agent to third-party apps via our performant API infrastructure.",
+      "checkDocs": "Check Docs"
     }
+  },
+  "Widget": {
+    "welcomeDefault": "Hi! How can I help you today?",
+    "assistantTitle": "AI Assistant",
+    "online": "Online",
+    "you": "You",
+    "placeholder": "Type a message...",
+    "poweredBy": "Powered by JCaesar Agent",
+    "aiLabel": "AI"
   },
   "Admin": {
     "sidebar": {

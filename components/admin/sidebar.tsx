@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -70,22 +71,28 @@ export function AdminSidebar() {
                initial={{ opacity: 0, x: -20 }}
                animate={{ opacity: 1, x: 0 }}
                exit={{ opacity: 0, x: -20 }}
-               className="flex items-center gap-4"
+               className="flex items-center gap-4 w-full"
             >
-              <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/10">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <span className="font-bold text-base tracking-tight whitespace-nowrap">JCaesar Admin</span>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest whitespace-nowrap">Neural Core Console</p>
+              <div className="relative w-56 h-14 overflow-hidden shrink-0">
+                <Image 
+                  src="/logo.svg" 
+                  alt="JCaesar Logo" 
+                  fill
+                  className="object-contain object-left invert brightness-0"
+                />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         
         {isCollapsed && (
-          <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
-             <Shield className="w-5 h-5 text-primary" />
+          <div className="relative w-12 h-12 overflow-hidden mx-auto">
+             <Image 
+               src="/logo.svg" 
+               alt="JCaesar Logo" 
+               fill
+               className="object-contain invert brightness-0"
+             />
           </div>
         )}
       </div>

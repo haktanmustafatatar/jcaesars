@@ -49,17 +49,17 @@ export async function POST(
     
     let context = "";
     if (dataSourceIds.length > 0) {
-      // Correctly formatted query for pgvector with array of IDs
-      const documents: any[] = await prisma.$queryRaw`
-        SELECT content, title, url, 1 - (embedding <=> ${vectorString}::vector) as similarity
+      // Use a more robust raw query format for PostgreSQL
+      const documents: any[] = await prisma.$queryRawUnsafe(`
+        SELECT content, title, url, 1 - (embedding <=> $1::vector) as similarity
         FROM "Document"
-        WHERE "dataSourceId" = ANY(${dataSourceIds})
+        WHERE "dataSourceId" IN (${dataSourceIds.map((_, i) => `$${i + 2}`).join(',')})
         ORDER BY similarity DESC
         LIMIT 5
-      `;
+      `, vectorString, ...dataSourceIds);
 
       context = documents
-        .filter((doc) => doc.similarity > 0.5) // Only relevant ones
+        .filter((doc) => doc.similarity > 0.4) // Lowered threshold slightly for better recall
         .map((doc) => `Source: ${doc.title || doc.url}\nContent: ${doc.content}`)
         .join("\n\n");
     }

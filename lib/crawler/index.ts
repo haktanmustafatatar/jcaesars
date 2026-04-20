@@ -17,6 +17,228 @@ const firecrawl = new FirecrawlApp({
   apiKey: process.env.FIRECRAWL_API_KEY || "",
 });
 
+// --- HELPER WRAPPERS AND UTILITIES ---
+
+/**
+ * Detect platform (Shopify, WooCommerce, etc)
+ */
+async function detectPlatform(baseUrl: string) {
+  try {
+    const response = await fetch(baseUrl, { 
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' }
+    });
+    const html = await response.text();
+    const headers = response.headers;
+
+    if (html.includes('cdn.shopify.com') || html.includes('Shopify.shop') || html.includes('myshopify.com')) {
+      return "SHOPIFY";
+    }
+    if (html.includes('wp-content/plugins/woocommerce')) {
+      return "WOOCOMMERCE";
+    }
+    return "CUSTOM";
+  } catch (err) {
+    console.error(`[Detector] Failed to detect platform for ${baseUrl}:`, err);
+    return "CUSTOM";
+  }
+}
+
+/**
+ * Enhanced Sitemap Discovery
+ */
+async function discoverSitemaps(baseUrl: string): Promise<string[]> {
+  const sitemaps = new Set<string>();
+  
+  try {
+    // 1. Check robots.txt
+    const robotsRes = await fetch(`${baseUrl}/robots.txt`);
+    if (robotsRes.ok) {
+      const text = await robotsRes.text();
+      const matches = text.matchAll(/^Sitemap:\s*(.*)$/gim);
+      for (const match of matches) {
+        if (match[1]) sitemaps.add(match[1].trim());
+      }
+    }
+    
+    // 2. Common paths if robots.txt didn't help
+    if (sitemaps.size === 0) {
+      const commonPaths = ['/sitemap.xml', '/sitemap_index.xml', '/sitemap-products.xml'];
+      for (const path of commonPaths) {
+        const res = await fetch(`${baseUrl}${path}`, { method: 'HEAD' });
+        if (res.ok) sitemaps.add(`${baseUrl}${path}`);
+      }
+    }
+  } catch (err) {
+    console.warn(`[SitemapDiscovery] Error discovering sitemaps for ${baseUrl}:`, err);
+  }
+
+  return Array.from(sitemaps);
+}
+
+/**
+ * Shopify Products API Scraper
+ */
+async function scrapeShopifyProducts(baseUrl: string, limit = 100) {
+  try {
+    const productsUrl = `${baseUrl}/products.json?limit=${limit}`;
+    console.log(`[ShopifyScraper] Fetching products from ${productsUrl}`);
+    
+    const response = await fetch(productsUrl);
+    if (!response.ok) throw new Error(`Shopify API responded with ${response.status}`);
+    
+    const data = await response.json();
+    const products = data.products || [];
+    
+    return products.map((p: any) => {
+      // Create a markdown summary of the product
+      let markdown = `# ${p.title}\n\n`;
+      if (p.body_html) {
+          // Shopify bodies are usually HTML
+          markdown += turndownService.turndown(p.body_html);
+      }
+      
+      // Variants & Pricing
+      const variants = p.variants || [];
+      if (variants.length > 0) {
+        markdown += `\n\n### Options & Pricing\n`;
+        variants.forEach((v: any) => {
+          markdown += `- **${v.title}**: ${v.price} (SKU: ${v.sku || 'N/A'})\n`;
+        });
+      }
+
+      return {
+        markdown,
+        html: p.body_html || p.title,
+        metadata: {
+          title: p.title,
+          sourceURL: `${baseUrl}/products/${p.handle}`,
+          price: variants[0]?.price,
+          sku: variants[0]?.sku,
+          handle: p.handle,
+          images: p.images?.map((img: any) => img.src) || [],
+          platform: "SHOPIFY",
+          type: "PRODUCT"
+        }
+      };
+    });
+  } catch (err) {
+    console.error(`[ShopifyScraper] Failed:`, err);
+    return [];
+  }
+}
+
+/**
+ * Extract Structured Data (JSON-LD)
+ */
+function extractStructuredData(html: string) {
+  const dom = new JSDOM(html);
+  const scripts = dom.window.document.querySelectorAll('script[type="application/ld+json"]');
+  let result: any = {};
+
+  scripts.forEach(script => {
+    try {
+      const data = JSON.parse(script.textContent || "{}");
+      
+      // Look for Product info
+      const findProduct = (obj: any): any => {
+        if (obj?.["@type"] === "Product" || obj?.type === "Product") return obj;
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            const res = findProduct(item);
+            if (res) return res;
+          }
+        }
+        if (typeof obj === 'object' && obj !== null) {
+          if (obj["@graph"] && Array.isArray(obj["@graph"])) return findProduct(obj["@graph"]);
+          for (const k in obj) {
+            const res = findProduct(obj[k]);
+            if (res) return res;
+          }
+        }
+        return null;
+      };
+
+      const product = findProduct(data);
+      if (product) {
+        result = {
+          ...result,
+          title: product.name,
+          description: product.description,
+          sku: product.sku || product.mpn,
+          brand: product.brand?.name || product.brand,
+          price: product.offers?.price || product.offers?.[0]?.price,
+          currency: product.offers?.priceCurrency || product.offers?.[0]?.priceCurrency,
+          availability: product.offers?.availability || product.offers?.[0]?.availability
+        };
+      }
+    } catch {}
+  });
+
+  return result;
+}
+
+/**
+ * Lightweight Scraper (No Browser)
+ */
+async function lightweightScrape(url: string) {
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' },
+      signal: AbortSignal.timeout(30000)
+    });
+
+    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
+
+    const html = await response.text();
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!contentType.includes('text/html')) {
+        throw new Error(`Invalid content type: ${contentType}`);
+    }
+
+    // 1. Extract Structured Data
+    const structuredData = extractStructuredData(html);
+
+    // 2. Extract Main Content via Readability
+    const dom = new JSDOM(html, { url });
+    const reader = new Readability(dom.window.document);
+    const article = reader.parse();
+
+    if (!article || (!article.content && !structuredData.title)) {
+      throw new Error("Page seems to be empty or requires JavaScript");
+    }
+
+    // 3. Convert to Markdown
+    let contentToConvert = article?.content || `<div>${structuredData.description || ''}</div>`;
+    let markdown = turndownService.turndown(contentToConvert);
+
+    // 4. Enrich markdown with structured data if it's a product
+    if (structuredData.price) {
+      markdown = `## Product Details\n- **Price**: ${structuredData.price} ${structuredData.currency || ''}\n- **SKU**: ${structuredData.sku || 'N/A'}\n- **Brand**: ${structuredData.brand || 'N/A'}\n\n${markdown}`;
+    }
+
+    return {
+      success: true,
+      data: {
+        markdown,
+        html: contentToConvert,
+        metadata: {
+          title: structuredData.title || article?.title || "Untitled",
+          description: structuredData.description || article?.excerpt || "",
+          sourceURL: url,
+          price: structuredData.price,
+          currency: structuredData.currency,
+          sku: structuredData.sku,
+          isLightweight: true
+        }
+      }
+    };
+  } catch (err) {
+    console.warn(`[LightweightScrape] Failed for ${url}:`, err);
+    return { success: false, error: err instanceof Error ? err.message : "Fetch failed" };
+  }
+}
+
 // Website crawling
 // Website crawling
 export async function crawlWebsite({
@@ -33,89 +255,196 @@ export async function crawlWebsite({
   dataSourceId: string;
 }) {
   try {
-    // Dahili Crawler Mantığı (Firecrawl olmadan)
-    console.log(`[Crawler] Starting optimized internal crawl for: ${url} (maxDepth: ${maxDepth}, limit: ${limit})`);
+    // Normalize URL - handle cases where user might have added extra protocol or spaces
+    url = url.trim();
+    if (url.startsWith('https://')) {
+      // Do nothing
+    } else if (url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+    } else {
+      url = `https://${url}`;
+    }
     
+    // Remove potential double slashes after protocol
+    url = url.replace(/https:\/\/(https:\/\/|http:\/\/)+/g, 'https://');
+    
+    // 1. Detect Platform & Sitemaps
+    const baseUrl = new URL(url).origin;
+    const platform = await detectPlatform(baseUrl);
+    console.log(`[Crawler] Platform detected: ${platform}`);
+
+    // Discover Sitemaps
+    const sitemaps = await discoverSitemaps(baseUrl);
+    console.log(`[Crawler] Found ${sitemaps.length} sitemaps`);
+
     const pages: any[] = [];
     const visited = new Set<string>();
     const queue: { url: string; depth: number }[] = [{ url, depth: 0 }];
-    const baseUrl = new URL(url).origin;
+
+    if (sitemaps.length > 0) {
+      for (const sitemap of sitemaps) {
+        const sitemapUrls = await getSitemapUrls(sitemap);
+        console.log(`[Crawler] Extracted ${sitemapUrls.length} URLs from sitemap ${sitemap}`);
+        for (const sUrl of sitemapUrls) {
+          if (!visited.has(sUrl)) {
+            queue.push({ url: sUrl, depth: 1 }); // Sitemaps are depth 0 or 1
+          }
+        }
+      }
+    }
+
+    // Shopify Specific: Scrape products via API immediately (much faster)
+    if (platform === "SHOPIFY") {
+      console.log(`[Crawler] Shopify detected. Utilizing Products API for faster indexing.`);
+      const shopifyPages = await scrapeShopifyProducts(baseUrl, limit);
+      pages.push(...shopifyPages);
+      
+      // If we got enough products, we might not need a deep crawl, 
+      // but let's continue for other pages (about, contact, etc.)
+      shopifyPages.forEach(p => visited.add(p.metadata.sourceURL));
+    }
 
     let browser;
     try {
-      browser = await chromium.launch({ headless: true });
-      const context = await browser.newContext({
-        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      });
-
+      // --- BATCH PARALLEL CRAWLING ---
+      const CONCURRENCY = 8; // Higher concurrency allowed for lightweight
+      
       while (queue.length > 0 && pages.length < limit) {
-        const { url: currentUrl, depth } = queue.shift()!;
-        
-        if (visited.has(currentUrl)) continue;
-        visited.add(currentUrl);
+        // Get next batch of URLs
+        const batch = [];
+        while (queue.length > 0 && batch.length < CONCURRENCY && (pages.length + batch.length) < limit) {
+          const item = queue.shift()!;
+          if (!visited.has(item.url)) {
+            visited.add(item.url);
+            batch.push(item);
+          }
+        }
 
-        console.log(`[Crawler] [${pages.length + 1}/${limit}] Crawling: ${currentUrl} (depth: ${depth})`);
+        if (batch.length === 0) continue;
 
-        try {
-          // Sayfayı tara (Oturumu paylaşarak)
-          const page = await context.newPage();
-          page.setDefaultTimeout(20000); // 20s timeout per page
+        console.log(`[Crawler] Processing batch of ${batch.length} pages. Total indexed so far: ${pages.length}`);
 
-          await page.goto(currentUrl, { waitUntil: "networkidle" });
-          const html = await page.content();
-          const pageTitle = await page.title();
+        // Process batch in parallel
+        await Promise.all(batch.map(async ({ url: currentUrl, depth }) => {
+          try {
+            // STEP 1: Try Lightweight Scrape (HTTP Fetch + JSDOM)
+            const lightResult = await lightweightScrape(currentUrl);
+            
+            if (lightResult.success) {
+              pages.push(lightResult.data);
+              
+              // Mark as COMPLETED with metadata
+              const charCount = lightResult.data.markdown.length;
+              const title = lightResult.data.metadata.title;
 
-          // Readability & Turndown
-          const dom = new JSDOM(html, { url: currentUrl });
-          const reader = new Readability(dom.window.document);
-          const article = reader.parse();
+              await prisma.dataSourceUrl.upsert({
+                where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                update: { 
+                  status: "COMPLETED", 
+                  lastCrawledAt: new Date(),
+                  charCount,
+                  title
+                },
+                create: { 
+                  dataSourceId, 
+                  url: currentUrl, 
+                  status: "COMPLETED", 
+                  lastCrawledAt: new Date(),
+                  charCount,
+                  title
+                }
+              });
 
-          if (article && article.content) {
-            const markdown = turndownService.turndown(article.content);
-            pages.push({
-              markdown,
-              html: article.content,
-              metadata: {
-                title: article.title || pageTitle,
-                description: article.excerpt,
-                language: article.lang || "en",
-                sourceURL: currentUrl,
-              }
-            });
-
-            // Link discovery (Eğer derinlik sınırı aşılmadıysa)
-            if (depth < maxDepth) {
-              const links = await page.evaluate((base) => {
-                return Array.from(document.querySelectorAll("a"))
-                  .map((a) => a.href)
-                  .filter((href) => {
+              // Discover links from lightweight if depth permits
+              if (depth < maxDepth && sitemaps.length === 0) { // Only discover if sitemaps didn't give us list
+                const dom = new JSDOM(lightResult.data.html, { url: currentUrl });
+                const links = Array.from(dom.window.document.querySelectorAll("a"))
+                  .map(a => (a as HTMLAnchorElement).href)
+                  .filter(href => {
                     try {
-                      const u = new URL(href);
-                      // Avoid common bad links
-                      return (
-                        u.origin === base && 
-                        !href.includes("#") && 
-                        !href.includes("?") &&
-                        !href.endsWith(".jpg") &&
-                        !href.endsWith(".png") &&
-                        !href.endsWith(".pdf")
-                      );
+                      const u = new URL(href, currentUrl);
+                      return u.origin === baseUrl && !href.includes("#");
                     } catch { return false; }
                   });
-              }, baseUrl);
 
-              for (const link of Array.from(new Set(links))) {
-                if (!visited.has(link)) {
-                  queue.push({ url: link, depth: depth + 1 });
+                for (const link of Array.from(new Set(links))) {
+                  if (!visited.has(link)) {
+                    queue.push({ url: link, depth: depth + 1 });
+                  }
                 }
               }
+              return;
             }
+
+            // STEP 2: Fallback to Playwright (Browser)
+            console.log(`[Crawler] Lightweight failed for ${currentUrl}. Falling back to Playwright...`);
+            
+            if (!browser) {
+              browser = await chromium.launch({ headless: true });
+            }
+            const context = await browser.newContext({
+              userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            });
+            const pageInstance = await context.newPage();
+            pageInstance.setDefaultTimeout(60000);
+
+            await pageInstance.goto(currentUrl, { waitUntil: "networkidle" });
+            const html = await pageInstance.content();
+            const pageTitle = await pageInstance.title();
+
+            // Use the same structured data extraction logic
+            const structuredData = extractStructuredData(html);
+            const dom = new JSDOM(html, { url: currentUrl });
+            const reader = new Readability(dom.window.document);
+            const article = reader.parse();
+
+            if (article && article.content) {
+              let markdown = turndownService.turndown(article.content);
+              if (structuredData.price) {
+                markdown = `## Product Details\n- **Price**: ${structuredData.price} ${structuredData.currency || ''}\n- **SKU**: ${structuredData.sku || 'N/A'}\n\n${markdown}`;
+              }
+
+              pages.push({
+                markdown,
+                html: article.content,
+                metadata: {
+                  title: structuredData.title || article.title || pageTitle,
+                  description: structuredData.description || article.excerpt,
+                  sourceURL: currentUrl,
+                  price: structuredData.price,
+                  currency: structuredData.currency,
+                  sku: structuredData.sku
+                }
+              });
+
+              await prisma.dataSourceUrl.upsert({
+                where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                update: { 
+                  status: "COMPLETED", 
+                  lastCrawledAt: new Date(),
+                  charCount,
+                  title
+                },
+                create: { 
+                  dataSourceId, 
+                  url: currentUrl, 
+                  status: "COMPLETED", 
+                  lastCrawledAt: new Date(),
+                  charCount,
+                  title
+                }
+              });
+            }
+            await pageInstance.close();
+          } catch (err) {
+            console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
+            await prisma.dataSourceUrl.upsert({
+              where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+              update: { status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" },
+              create: { dataSourceId, url: currentUrl, status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" }
+            });
           }
-          
-          await page.close(); // İş bittiğinde sayfayı kapat ama browser kalsın
-        } catch (err) {
-          console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
-        }
+        }));
       }
     } finally {
       if (browser) await browser.close();
@@ -228,7 +557,7 @@ export async function internalScrape(url: string) {
     const page = await context.newPage();
     
     // Set timeout to 30s
-    page.setDefaultTimeout(30000);
+    page.setDefaultTimeout(60000);
 
     console.log(`[InternalScraper] Navigating to ${url}...`);
     await page.goto(url, { waitUntil: "networkidle" });
@@ -407,9 +736,15 @@ export async function updateChatbotStatus(chatbotId: string) {
 
   const allCompleted = chatbot.dataSources.every(ds => ds.status === "COMPLETED");
   const anyError = chatbot.dataSources.some(ds => ds.status === "ERROR");
+  
+  // Early Activation: If we have at least 10 documents indexed across all sources, consider it ACTIVE
+  const documentCount = await prisma.document.count({
+    where: { dataSource: { chatbotId } }
+  });
+  const reachedThreshold = documentCount >= 10;
 
   let newStatus = chatbot.status;
-  if (allCompleted) newStatus = "ACTIVE";
+  if (allCompleted || reachedThreshold) newStatus = "ACTIVE";
   else if (anyError) newStatus = "ERROR";
   else if (chatbot.dataSources.length > 0) newStatus = "TRAINING";
 

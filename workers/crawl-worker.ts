@@ -23,6 +23,12 @@ export const crawlWorker = new Worker(
         data: { status: "CRAWLING", crawlStatus: "In progress..." },
       });
 
+      // Mark chatbot as ACTIVE early to allow interaction during crawl
+      await prisma.chatbot.update({
+        where: { id: chatbotId },
+        data: { status: "ACTIVE" },
+      });
+
       let result;
 
       switch (type) {
@@ -81,7 +87,7 @@ export const crawlWorker = new Worker(
   },
   {
     connection: redisConnection,
-    concurrency: 1, // Aynı anda 1 crawl işlemi (stabilite için)
+    concurrency: 3, // Aynı anda 3 crawl işlemi (multi-customer desteği)
     lockDuration: 300000, // 5 dakika (Playwright için yeterli süre)
   }
 );
