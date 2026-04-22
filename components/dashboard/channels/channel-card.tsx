@@ -31,8 +31,8 @@ interface ChannelCardProps {
   name: string;
   details?: string;
   onConnect: () => void;
-  onDisconnect: () => void;
-  onConfigure: () => void;
+  onDisconnect?: () => void;
+  onConfigure?: () => void;
   isLoading?: boolean;
 }
 
@@ -95,14 +95,16 @@ export function ChannelCard({
           <div className="flex items-center gap-2">
             {isConnected ? (
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-xl h-10 w-10 hover:bg-zinc-100"
-                  onClick={onConfigure}
-                >
-                  <Settings2 className="w-4 h-4 text-zinc-400" />
-                </Button>
+                {onConfigure && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-xl h-10 w-10 hover:bg-zinc-100"
+                    onClick={onConfigure}
+                  >
+                    <Settings2 className="w-4 h-4 text-zinc-400" />
+                  </Button>
+                )}
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
