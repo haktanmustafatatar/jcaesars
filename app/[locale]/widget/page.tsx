@@ -28,7 +28,8 @@ interface Citation {
   similarity: number;
 }
 
-export default function WidgetPage({ chatbotSlug = "demo" }: { chatbotSlug?: string }) {
+export default function WidgetPage() {
+  const chatbotSlug = "demo";
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [showLeadForm, setShowLeadForm] = useState(false);
