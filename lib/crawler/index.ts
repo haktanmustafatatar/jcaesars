@@ -304,7 +304,7 @@ export async function crawlWebsite({
       shopifyPages.forEach((p: any) => visited.add(p.metadata.sourceURL));
     }
 
-    let browser;
+    let browser: any;
     try {
       // --- BATCH PARALLEL CRAWLING ---
       const CONCURRENCY = 8; // Higher concurrency allowed for lightweight
