@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import { prisma } from "@/lib/prisma";
+import { performRAGSearch, generateRAGResponse } from "@/lib/ai";
 
 const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
@@ -216,7 +217,6 @@ export const channelWorker = new Worker(
         }));
 
         // 3. Generate AI Response
-        const { generateRAGResponse } = await import("@/lib/ai");
         const aiResponse = await generateRAGResponse({
           messages: formattedMessages,
           model: (chatbot.model as any) || "gpt-4o",
@@ -266,7 +266,7 @@ export const channelWorker = new Worker(
       const channelConfig = await prisma.channel.findFirst({
         where: {
           chatbotId,
-          type: channel.toUpperCase(),
+          type: channel.toUpperCase() as any,
           status: "CONNECTED",
         },
       });
@@ -335,7 +335,7 @@ export const channelWorker = new Worker(
 
       // Hata durumunda channel'ı error durumuna getir
       await prisma.channel.updateMany({
-        where: { chatbotId, type: channel.toUpperCase() },
+        where: { chatbotId, type: channel.toUpperCase() as any },
         data: { status: "ERROR" },
       });
 
