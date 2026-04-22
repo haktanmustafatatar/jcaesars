@@ -301,7 +301,7 @@ export async function crawlWebsite({
       
       // If we got enough products, we might not need a deep crawl, 
       // but let's continue for other pages (about, contact, etc.)
-      shopifyPages.forEach(p => visited.add(p.metadata.sourceURL));
+      shopifyPages.forEach((p: any) => visited.add(p.metadata.sourceURL));
     }
 
     let browser;
