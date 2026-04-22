@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { searchDocuments } from "@/lib/crawler";
-import { streamRAGResponse, LLMModel } from "@/lib/ai";
+import { streamRAGResponse, LLMModel, performRAGSearch } from "@/lib/ai";
 import { addTokenUsageJob } from "@/lib/queue";
 
 // GET /api/embed/:chatbotId/config - Get chatbot configuration for embed
