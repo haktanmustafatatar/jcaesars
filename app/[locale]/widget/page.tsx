@@ -49,7 +49,7 @@ export default function WidgetPage() {
   }, [chatbotSlug]);
 
   // Vercel AI SDK useChat
-  const { messages, input, handleInputChange, handleSubmit, isLoading, data, body } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, data } = useChat({
     api: `/api/embed/${chatbotSlug}`,
     body: {
       name: leadData.name,
