@@ -12,7 +12,8 @@ import {
   Loader2,
   ChevronRight,
   ShoppingBag,
-  ShoppingCart
+  ShoppingCart,
+  Calendar
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface ChannelCardProps {
-  type: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "SHOPIFY" | "WOOCOMMERCE";
+  type: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "SHOPIFY" | "WOOCOMMERCE" | "GOOGLE_CALENDAR";
   status: "CONNECTED" | "DISCONNECTED" | "ERROR" | "PENDING";
   name: string;
   details?: string;
@@ -61,7 +62,8 @@ export function ChannelCard({
     INSTAGRAM: <Instagram className="w-6 h-6 text-pink-500" />,
     FACEBOOK: <Facebook className="w-6 h-6 text-blue-600" />,
     SHOPIFY: <ShoppingBag className="w-6 h-6 text-[#95bf47]" />,
-    WOOCOMMERCE: <ShoppingCart className="w-6 h-6 text-[#96588a]" />
+    WOOCOMMERCE: <ShoppingCart className="w-6 h-6 text-[#96588a]" />,
+    GOOGLE_CALENDAR: <Calendar className="w-6 h-6 text-[#4285F4]" />
   };
 
   const statusColors = {
