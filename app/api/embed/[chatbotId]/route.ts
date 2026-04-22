@@ -89,7 +89,7 @@ export async function POST(
         data: {
           chatbotId: chatbot.id,
           channel: "widget",
-          metadata: (name || email) ? { name, email } : undefined,
+          tags: (name || email) ? { name, email } : undefined,
         },
       });
     } else if (name || email) {
@@ -97,8 +97,8 @@ export async function POST(
       await prisma.conversation.update({
         where: { id: conversationId },
         data: { 
-          metadata: { 
-            ...(conversation.metadata as any || {}),
+          tags: { 
+            ...(conversation.tags as any || {}),
             name, 
             email 
           } 
