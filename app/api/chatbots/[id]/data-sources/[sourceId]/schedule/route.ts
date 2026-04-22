@@ -67,7 +67,7 @@ export async function PATCH(
           limit: 100,
         },
         {
-          repeat: { cron, tz: "Europe/Istanbul" }, // Istanbul time
+          repeat: { pattern: cron, tz: "Europe/Istanbul" }, // Istanbul time
           attempts: 3,
           backoff: { type: "exponential", delay: 5000 }
         }
