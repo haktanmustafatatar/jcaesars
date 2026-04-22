@@ -82,6 +82,8 @@ export async function streamRAGResponse({
   temperature = 0.7,
   maxTokens = 1000,
   onFinish,
+  chatbotId,
+  conversationId,
 }: {
   messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
   model: LLMModel;
@@ -137,7 +139,6 @@ export async function generateRAGResponse({
   systemPrompt: string;
   context: string;
   temperature?: number;
-  maxTokens?: number;
   maxTokens?: number;
   chatbotId?: string;
   conversationId?: string;
