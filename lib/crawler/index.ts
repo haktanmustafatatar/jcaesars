@@ -422,17 +422,17 @@ export async function crawlWebsite({
                 update: { 
                   status: "COMPLETED", 
                   lastCrawledAt: new Date(),
-                  charCount,
-                  title
+                  charCount: markdown.length,
+                  title: structuredData.title || article.title || pageTitle
                 },
                 create: { 
                   dataSourceId, 
                   url: currentUrl, 
                   status: "COMPLETED", 
                   lastCrawledAt: new Date(),
-                  charCount,
-                  title
-                }
+                  charCount: markdown.length,
+                  title: structuredData.title || article.title || pageTitle
+                },
               });
             }
             await pageInstance.close();
