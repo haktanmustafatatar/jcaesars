@@ -330,7 +330,7 @@ export async function crawlWebsite({
             // STEP 1: Try Lightweight Scrape (HTTP Fetch + JSDOM)
             const lightResult = await lightweightScrape(currentUrl);
             
-            if (lightResult.success) {
+            if (lightResult.success && lightResult.data) {
               pages.push(lightResult.data);
               
               // Mark as COMPLETED with metadata
