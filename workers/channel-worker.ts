@@ -285,7 +285,7 @@ export const channelWorker = new Worker(
           result = await sendMetaMessage({
             channel,
             recipientId,
-            message,
+            message: userMessage,
             accessToken: config.accessToken,
           });
           break;
@@ -293,7 +293,7 @@ export const channelWorker = new Worker(
         case "telegram":
           result = await sendTelegramMessage({
             chatId: recipientId,
-            message,
+            message: userMessage,
             botToken: config.botToken,
           });
           break;
@@ -301,7 +301,7 @@ export const channelWorker = new Worker(
         case "slack":
           result = await sendSlackMessage({
             channel: recipientId,
-            message,
+            message: userMessage,
             botToken: config.botToken,
           });
           break;
@@ -310,7 +310,7 @@ export const channelWorker = new Worker(
           result = await sendEmailMessage({
             to: recipientId,
             subject: "New Message",
-            message,
+            message: userMessage,
           });
           break;
 
@@ -321,9 +321,9 @@ export const channelWorker = new Worker(
       // Mesajı veritabanına kaydet
       await prisma.message.create({
         data: {
-          conversationId,
+          conversationId: existingConversationId,
           role: "ASSISTANT",
-          content: message,
+          content: userMessage,
         },
       });
 
