@@ -10,7 +10,9 @@ import {
   Settings2, 
   Link2Off,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  ShoppingBag,
+  ShoppingCart
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface ChannelCardProps {
-  type: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
+  type: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "SHOPIFY" | "WOOCOMMERCE";
   status: "CONNECTED" | "DISCONNECTED" | "ERROR" | "PENDING";
   name: string;
   details?: string;
@@ -57,7 +59,9 @@ export function ChannelCard({
   const icons = {
     WHATSAPP: <MessageSquare className="w-6 h-6 text-emerald-500" />,
     INSTAGRAM: <Instagram className="w-6 h-6 text-pink-500" />,
-    FACEBOOK: <Facebook className="w-6 h-6 text-blue-600" />
+    FACEBOOK: <Facebook className="w-6 h-6 text-blue-600" />,
+    SHOPIFY: <ShoppingBag className="w-6 h-6 text-[#95bf47]" />,
+    WOOCOMMERCE: <ShoppingCart className="w-6 h-6 text-[#96588a]" />
   };
 
   const statusColors = {
