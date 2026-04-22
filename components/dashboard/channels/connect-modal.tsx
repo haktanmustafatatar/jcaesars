@@ -22,7 +22,7 @@ import {
   Loader2,
   Globe
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+
 import { toast } from "sonner";
 
 interface ConnectModalProps {
@@ -206,7 +206,7 @@ export function ConnectModal({
               disabled={isLoading}
               className="w-full bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl h-14 font-black shadow-2xl transition-all hover:scale-[1.02]"
             >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("submit")}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Connect"}
             </Button>
           </DialogFooter>
         </div>
