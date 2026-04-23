@@ -8,6 +8,10 @@ const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:
   enableReadyCheck: false,
 });
 
+redisConnection.on("error", (err) => {
+  console.warn("[Redis/ChannelWorker] Connection error (expected during build):", err.message);
+});
+
 // Meta (WhatsApp, Instagram, Facebook) API
 async function sendMetaMessage({
   channel,

@@ -8,6 +8,10 @@ const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:
   enableReadyCheck: false,
 });
 
+redisConnection.on("error", (err) => {
+  console.warn("[Redis/CrawlWorker] Connection error (expected during build):", err.message);
+});
+
 // Crawl Worker
 export const crawlWorker = new Worker(
   "crawl",

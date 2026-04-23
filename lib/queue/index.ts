@@ -7,6 +7,10 @@ const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:
   enableReadyCheck: false,
 });
 
+redisConnection.on("error", (err) => {
+  console.warn("[Redis] Connection error (expected during build):", err.message);
+});
+
 // Queue tanımları
 export const queues = {
   // Crawl işlemleri

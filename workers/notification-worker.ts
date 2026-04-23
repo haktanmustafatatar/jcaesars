@@ -6,6 +6,10 @@ const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:
   enableReadyCheck: false,
 });
 
+redisConnection.on("error", (err) => {
+  console.warn("[Redis/NotificationWorker] Connection error (expected during build):", err.message);
+});
+
 // SendGrid email gönderimi
 async function sendEmail({
   to,

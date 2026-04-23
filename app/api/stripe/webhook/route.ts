@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, handleWebhookEvent } from "@/lib/stripe";
 import Stripe from "stripe";
 
+export const dynamic = 'force-dynamic';
+
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
 export async function POST(req: NextRequest) {
