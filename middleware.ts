@@ -12,16 +12,15 @@ const isProtectedRoute = createRouteMatcher([
   "/api/conversations(.*)",
   "/api/settings(.*)",
   "/api/crawl(.*)",
+  "/api/admin(.*)",
 ]);
 
-const isAdminRoute = createRouteMatcher(["/(tr|en|ru|ar|fr|de|gr)/admin(.*)"]);
+const isAdminRoute = createRouteMatcher([
+  "/(tr|en|ru|ar|fr|de|gr)/admin(.*)",
+  "/api/admin(.*)",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Bypass next-intl for API routes to prevent JSON parsing errors (returning HTML)
-  if (req.nextUrl.pathname.startsWith('/api')) {
-    return NextResponse.next();
-  }
-
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
@@ -30,6 +29,11 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect((has) => {
       return has({ role: "org:admin" }) || has({ role: "org:superadmin" });
     });
+  }
+
+  // Bypass next-intl for API routes to prevent JSON parsing errors (returning HTML)
+  if (req.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
   }
 
   return intlMiddleware(req);
