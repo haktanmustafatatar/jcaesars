@@ -17,20 +17,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
+    const { internalScrape } = await import("@/lib/crawler");
     // Firecrawl Scrape for metadata & brand assets
-    const scrapeResponse = await firecrawl.scrapeUrl(url, {
-      formats: ["markdown", "html"],
-      onlyMainContent: true,
-    }) as any;
+    const scrapeResponse = await internalScrape(url);
 
     if (!scrapeResponse.success) {
-      return NextResponse.json({ error: scrapeResponse.error }, { status: 500 });
+      return NextResponse.json({ error: scrapeResponse.error || "Scraping failed" }, { status: 500 });
     }
 
-    const metadata = scrapeResponse.data.metadata || {};
+    const metadata = (scrapeResponse as any).data?.metadata || {};
     
     // Attempt to extract logo if not in metadata
-    let logo = metadata.ogImage || metadata.twitterImage || "";
+    let logo = metadata.ogImage || metadata.twitterImage || metadata.favicon || "";
     
     // Very basic color extraction logic (mocked for now, can be improved with image analysis)
     const primaryColor = "#e25b31"; // Default JCaesar color

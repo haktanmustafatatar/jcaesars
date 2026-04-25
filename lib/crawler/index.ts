@@ -46,7 +46,7 @@ async function detectPlatform(baseUrl: string) {
 /**
  * Enhanced Sitemap Discovery
  */
-async function discoverSitemaps(baseUrl: string): Promise<string[]> {
+export async function discoverSitemaps(baseUrl: string): Promise<string[]> {
   const sitemaps = new Set<string>();
   
   try {
@@ -621,26 +621,16 @@ export async function internalScrape(url: string) {
   }
 }
 
-// Tek sayfa scrape
 export async function scrapePage(url: string) {
-  // Önce dahili tarayıcıyı dene
+  // Sadece dahili tarayıcıyı (Open Source Playwright) kullan
   const internalResult = await internalScrape(url);
   if (internalResult.success) {
     return internalResult.data;
   }
 
-  // Hata durumunda Firecrawl'a dön (B Planı)
-  console.log(`[Crawler] Internal scrape failed, falling back to Firecrawl for: ${url}`);
-  const scrapeResponse = await firecrawl.scrapeUrl(url, {
-    formats: ["markdown", "html"],
-    onlyMainContent: true,
-  });
-
-  if (!scrapeResponse.success) {
-    throw new Error(scrapeResponse.error || "Scrape failed");
-  }
-
-  return (scrapeResponse as any).data ?? scrapeResponse;
+  // Hata durumunda doğrudan fırlat
+  console.error(`[Crawler] Internal scrape failed for: ${url}`, internalResult.error);
+  throw new Error(internalResult.error || "Scrape failed using internal engine");
 }
 
 // Sitemap'den URL'leri çek
