@@ -7,7 +7,11 @@ const firecrawl = new FirecrawlApp({
 
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json();
+    let { url } = await req.json();
+    
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });

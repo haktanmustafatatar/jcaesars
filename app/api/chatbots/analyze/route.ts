@@ -17,7 +17,11 @@ export async function POST(req: NextRequest) {
       }
 
       const body = await req.json();
-      url = body.url;
+      let rawUrl = body.url;
+      if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+        rawUrl = 'https://' + rawUrl;
+      }
+      url = rawUrl;
       useCase = body.useCase || "support";
 
       if (!url) {
