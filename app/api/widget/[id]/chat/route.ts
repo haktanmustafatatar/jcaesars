@@ -27,8 +27,8 @@ export async function POST(
       },
     });
 
-    if (!chatbot || chatbot.status !== "ACTIVE") {
-      return NextResponse.json({ error: "Chatbot not active or not found" }, { status: 404 });
+    if (!chatbot || !chatbot.isPublic || chatbot.status !== "ACTIVE") {
+      return NextResponse.json({ error: "Chatbot not available or not active" }, { status: 403 });
     }
 
     // 2. Generate Embedding for User Message

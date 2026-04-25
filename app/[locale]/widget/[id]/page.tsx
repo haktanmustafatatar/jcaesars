@@ -45,7 +45,7 @@ export default function WidgetPage() {
 
   const fetchChatbot = async () => {
     try {
-      const res = await fetch(`/api/chatbots/${id}`);
+      const res = await fetch(`/api/widget/${id}`);
       if (res.ok) {
         const data = await res.json();
         setChatbot(data);
