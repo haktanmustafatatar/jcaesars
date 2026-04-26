@@ -58,31 +58,31 @@ export function ConnectModal({
   };
 
   const descriptions = {
-    WHATSAPP: "Link your WhatsApp Business phone number using Meta Cloud API tokens.",
-    INSTAGRAM: "Connect your Instagram Business account DMs to your AI agent.",
-    FACEBOOK: "Allow your agent to respond to Facebook Page messages.",
+    WHATSAPP: "Link your WhatsApp Business account using the secure Meta OAuth flow.",
+    INSTAGRAM: "Connect your Instagram Professional DM account to your AI agent.",
+    FACEBOOK: "Allow your agent to respond to Facebook Page messages automatically.",
     SHOPIFY: "Integrate your Shopify store to allow the AI to search products and check stock.",
     WOOCOMMERCE: "Connect your WooCommerce store to sync product catalog and inventory.",
     GOOGLE_CALENDAR: "Allow the AI to book appointments directly to your primary calendar."
   };
 
+  const isMetaType = type === "WHATSAPP" || type === "INSTAGRAM" || type === "FACEBOOK";
+
   const handleSubmit = async () => {
+    if (isMetaType) {
+      window.location.href = `/api/auth/meta/login?chatbotId=${chatbotId}&type=${type}`;
+      return;
+    }
+
     setIsLoading(true);
     try {
       let payload: any = { type, name: titles[type!] };
       
-      if (type === "WHATSAPP") {
-        payload.phoneNumberId = formData.phoneNumberId;
-        payload.config = { accessToken: formData.accessToken, verifyToken: formData.verifyToken };
-      } else if (type === "INSTAGRAM" || type === "FACEBOOK") {
-        payload.phoneNumberId = formData.pageId;
-        payload.config = { accessToken: formData.accessToken, pageId: formData.pageId, verifyToken: formData.verifyToken };
-      } else if (type === "SHOPIFY") {
+      if (type === "SHOPIFY") {
         payload.config = { shopDomain: formData.pageId, accessToken: formData.accessToken };
       } else if (type === "WOOCOMMERCE") {
         payload.config = { baseUrl: formData.pageId, consumerKey: formData.accessToken, consumerSecret: formData.phoneNumberId };
       } else if (type === "GOOGLE_CALENDAR") {
-        // This will normally be an OAuth flow, but for now let's allow manual refresh token entry
         payload.config = { clientId: formData.pageId, clientSecret: formData.phoneNumberId, refreshToken: formData.accessToken };
       }
 
@@ -132,83 +132,78 @@ export function ConnectModal({
             </div>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">
-                {type === "SHOPIFY" ? "Admin API Access Token" : 
-                 type === "WOOCOMMERCE" ? "Consumer Key" : 
-                 type === "GOOGLE_CALENDAR" ? "Refresh Token" : "Access Token"}
-              </Label>
-              <div className="relative">
-                <Input 
-                  value={formData.accessToken}
-                  onChange={(e) => setFormData({...formData, accessToken: e.target.value})}
-                  className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 pl-12 font-mono text-xs focus:bg-white transition-all shadow-none"
-                  placeholder={type === "SHOPIFY" ? "shpat_..." : "..."} 
-                />
-                <Key className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          {isMetaType ? (
+            <div className="space-y-6">
+              <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-zinc-950 flex items-center justify-center text-white shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-zinc-900">Secure OAuth Connection</p>
+                  <p className="text-xs text-zinc-500 font-medium leading-relaxed mt-1">
+                    Meta will allow you to select which pages or business accounts to connect. No login credentials will be stored on our servers.
+                  </p>
+                </div>
               </div>
+              <Button 
+                onClick={handleSubmit}
+                className="w-full h-16 rounded-3xl bg-[#1877F2] hover:bg-[#166fe5] text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Facebook className="w-6 h-6 fill-white" />
+                Login with Facebook
+              </Button>
             </div>
-
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">
-                {type === "SHOPIFY" ? "Store URL (myshopify.com)" : 
-                 type === "WOOCOMMERCE" ? "Site URL" : 
-                 type === "GOOGLE_CALENDAR" ? "Client ID" : "Page/Account ID"}
-              </Label>
-              <div className="relative">
-                <Input 
-                  value={formData.pageId}
-                  onChange={(e) => setFormData({...formData, pageId: e.target.value})}
-                  className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 pl-12 font-medium focus:bg-white transition-all shadow-none"
-                  placeholder={type === "SHOPIFY" ? "store-name.myshopify.com" : "..."} 
-                />
-                <Globe className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              </div>
-            </div>
-
-            {type === "WOOCOMMERCE" || type === "GOOGLE_CALENDAR" ? (
+          ) : (
+            <div className="space-y-6">
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">
-                  {type === "WOOCOMMERCE" ? "Consumer Secret" : "Client Secret"}
+                  {type === "SHOPIFY" ? "Admin API Access Token" : 
+                   type === "WOOCOMMERCE" ? "Consumer Key" : 
+                   type === "GOOGLE_CALENDAR" ? "Refresh Token" : "Access Token"}
                 </Label>
                 <div className="relative">
                   <Input 
-                    value={formData.phoneNumberId}
-                    onChange={(e) => setFormData({...formData, phoneNumberId: e.target.value})}
-                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 pl-12 font-medium focus:bg-white transition-all shadow-none"
-                    placeholder="..." 
+                    value={formData.accessToken}
+                    onChange={(e) => setFormData({...formData, accessToken: e.target.value})}
+                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 pl-12 font-mono text-xs focus:bg-white transition-all shadow-none"
+                    placeholder={type === "SHOPIFY" ? "shpat_..." : "..."} 
                   />
-                  <ShieldCheck className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Key className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
-            ) : null}
 
-            {(type === "WHATSAPP" || type === "INSTAGRAM" || type === "FACEBOOK") && (
-              <div className="p-6 rounded-3xl bg-zinc-950 text-white space-y-3 shadow-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Verify Token</span>
-                </div>
-                <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
-                  Use this token in your Meta App Webhook settings.
-                </p>
-                <div className="bg-white/10 p-3 rounded-xl font-mono text-xs flex items-center justify-between">
-                  <span>{formData.verifyToken}</span>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-1">
+                  {type === "SHOPIFY" ? "Store URL (myshopify.com)" : 
+                   type === "WOOCOMMERCE" ? "Site URL" : 
+                   type === "GOOGLE_CALENDAR" ? "Client ID" : "Page/Account ID"}
+                </Label>
+                <div className="relative">
+                  <Input 
+                    value={formData.pageId}
+                    onChange={(e) => setFormData({...formData, pageId: e.target.value})}
+                    className="h-14 rounded-2xl bg-zinc-50 border-zinc-100 pl-12 font-medium focus:bg-white transition-all shadow-none"
+                    placeholder={type === "SHOPIFY" ? "mystore.myshopify.com" : "..."} 
+                  />
+                  <Globe className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
-            )}
+
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isLoading}
+                className="w-full h-16 rounded-3xl bg-zinc-950 hover:bg-zinc-900 text-white font-black text-lg shadow-2xl shadow-black/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Connect Integration"}
+              </Button>
+            </div>
+          )}
+          
+          <div className="text-center">
+            <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest">
+              Secured by JCaesar Intelligence Shield
+            </p>
           </div>
-
-          <DialogFooter className="pt-4">
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isLoading}
-              className="w-full bg-zinc-950 hover:bg-zinc-900 text-white rounded-2xl h-14 font-black shadow-2xl transition-all hover:scale-[1.02]"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Connect"}
-            </Button>
-          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>

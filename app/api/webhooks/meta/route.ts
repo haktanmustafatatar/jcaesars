@@ -81,16 +81,15 @@ export async function POST(req: NextRequest) {
         const text = messaging.message.text;
 
         // For FB/IG, we match by receiverId (Page ID or IG Business ID)
-        // We store this in config or a dedicated field. Let's check config first.
         const channel = await prisma.channel.findFirst({
           where: { 
             type: body.object.toUpperCase() as any,
             status: "CONNECTED",
-            // For now matching via a custom logic or known receiver mapping
+            phoneNumberId: receiverId // We store PageID/IGID here during finalize
           }
         });
 
-        if (channel) {
+        if (channel && text) {
           await enqueueInboundMessage({
             chatbotId: channel.chatbotId,
             channel: platform,

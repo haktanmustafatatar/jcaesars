@@ -49,54 +49,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 
-// Elite Mock Data
-const conversations = [
-  {
-    id: "1",
-    user: { name: "Ahmet Yılmaz", email: "ahmet@jcaesar.ai", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmet" },
-    channel: "widget",
-    lastMessage: "Ürününüzün fiyatı nedir?",
-    lastMessageTime: "2dk",
-    unread: 2,
-    status: "active",
-    tags: ["satış", "VIP"],
-    online: true,
-  },
-  {
-    id: "2",
-    user: { name: "Zeynep Kaya", email: "zeynep@company.com", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Zeynep" },
-    channel: "whatsapp",
-    lastMessage: "Siparişim ne zaman gelir? Bekliyorum.",
-    lastMessageTime: "15dk",
-    unread: 0,
-    status: "active",
-    tags: ["destek"],
-    online: false,
-  },
-  {
-    id: "3",
-    user: { name: "Sarah Connor", email: "sarah@resistance.com", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
-    channel: "instagram",
-    lastMessage: "Harika bir kampanya bu!",
-    lastMessageTime: "1s",
-    unread: 1,
-    status: "active",
-    tags: ["fans"],
-    online: true,
-  },
-  {
-    id: "4",
-    user: { name: "Ayşe Şahin", email: "ayse@startup.com", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ayse" },
-    channel: "email",
-    lastMessage: "Teşekkürler, her şey mükemmel çalışıyor.",
-    lastMessageTime: "3s",
-    unread: 0,
-    status: "closed",
-    tags: ["çözüldü"],
-    online: false,
-  },
-];
-
 const channelConfig: Record<string, { icon: any, color: string, bg: string, label: string }> = {
   widget: { icon: Globe, color: "text-blue-500", bg: "bg-blue-50", label: "Website" },
   whatsapp: { icon: Phone, color: "text-emerald-500", bg: "bg-emerald-50", label: "WhatsApp" },
@@ -106,11 +58,68 @@ const channelConfig: Record<string, { icon: any, color: string, bg: string, labe
 };
 
 export default function InboxPage() {
-  const [selectedId, setSelectedId] = useState<string>("1");
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [isAiActive, setIsAiActive] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    if (selectedId) {
+      fetchMessages(selectedId);
+    }
+  }, [selectedId]);
+
+  const fetchConversations = async () => {
+    try {
+      const res = await fetch("/api/conversations");
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+        if (data.length > 0 && !selectedId) {
+          setSelectedId(data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMessages = async (id: string) => {
+    setIsMessagesLoading(true);
+    try {
+      const res = await fetch(`/api/conversations/${id}/messages`);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    } finally {
+      setIsMessagesLoading(false);
+    }
+  };
   
   const selectedConv = conversations.find(c => c.id === selectedId);
+
+  const formatTime = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000 / 60); // minutes
+    
+    if (diff < 1) return "Şimdi";
+    if (diff < 60) return `${diff}dk`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}s`;
+    return d.toLocaleDateString();
+  };
 
   return (
     <div className="h-[calc(100vh-10rem)] lg:h-[calc(100vh-8.5rem)] flex gap-6 overflow-hidden">
@@ -120,7 +129,7 @@ export default function InboxPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold tracking-tight">Inbox</h2>
-              <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mt-1">4 Active Sessions</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mt-1">{conversations.length} Active Sessions</p>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -146,9 +155,12 @@ export default function InboxPage() {
         <ScrollArea className="flex-1 px-4 pb-4">
           <div className="space-y-2">
             {conversations.map((conv) => {
-              const cfg = channelConfig[conv.channel];
+              const cfg = channelConfig[conv.channel] || channelConfig.widget;
               const isSelected = selectedId === conv.id;
               const Icon = cfg.icon;
+              const lastMsg = conv.messages?.[0];
+              const userName = conv.user?.name || conv.channelUserId || "Ziyaretçi";
+              const userAvatar = conv.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`;
               
               return (
                 <motion.button
@@ -173,10 +185,10 @@ export default function InboxPage() {
                   <div className="flex gap-4">
                     <div className="relative">
                       <Avatar className="w-12 h-12 rounded-2xl border-2 border-white shadow-sm">
-                        <AvatarImage src={conv.user.avatar} />
-                        <AvatarFallback className="bg-primary/5 text-primary font-bold">{conv.user.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={userAvatar} />
+                        <AvatarFallback className="bg-primary/5 text-primary font-bold">{userName.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      {conv.online && (
+                      {conv.status === "ACTIVE" && (
                         <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />
                       )}
                     </div>
@@ -184,9 +196,9 @@ export default function InboxPage() {
                     <div className="flex-1 min-w-0 pt-1">
                       <div className="flex justify-between items-center mb-1">
                         <span className={`text-sm font-bold truncate ${isSelected ? "text-zinc-900" : "text-zinc-700"}`}>
-                          {conv.user.name}
+                          {userName}
                         </span>
-                        <span className="text-[10px] font-bold text-muted-foreground">{conv.lastMessageTime}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">{lastMsg ? formatTime(lastMsg.createdAt) : ""}</span>
                       </div>
                       
                       <div className="flex items-center gap-1.5 mb-2">
@@ -195,14 +207,14 @@ export default function InboxPage() {
                       </div>
                       
                       <p className={`text-xs truncate font-medium ${isSelected ? "text-zinc-600" : "text-muted-foreground/80"}`}>
-                        {conv.lastMessage}
+                        {lastMsg?.content || "Mesaj yok"}
                       </p>
                     </div>
 
-                    {conv.unread > 0 && (
+                    {conv.unreadCount > 0 && (
                       <div className="self-start mt-1">
                          <span className="flex items-center justify-center w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full animate-bounce-slow">
-                           {conv.unread}
+                           {conv.unreadCount}
                          </span>
                       </div>
                     )}
@@ -314,68 +326,62 @@ export default function InboxPage() {
 
             {/* Message Flow */}
             <div className="space-y-8">
-              {[
-                { id: "1", role: "user", text: "Merhaba, ürününüzün fiyatı nedir?", time: "14:30", type: "text" },
-                { 
-                  id: "2", 
-                  role: "assistant", 
-                  text: "Merhaba! J.Caesar planları ihtiyacınıza göre şekillenir. Professional planımız $29/ay ile başlar. Detayları dökümandan buldum:", 
-                  time: "14:31", 
-                  source: "Pricing Policy" 
-                },
-                { id: "3", role: "user", text: "Peki ücretsiz deneme süreniz var mı?", time: "14:32" },
-                { 
-                  id: "4", 
-                  role: "assistant", 
-                  text: "Evet! 14 günlük tam kapsamlı deneme süremiz bulunmaktadır. Kredi kartı eklemenize gerek yok.", 
-                  time: "14:33",
-                  highlight: true 
-                },
-              ].map((msg) => (
-                <div key={msg.id} className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                  <div className="pt-2">
-                    <Avatar className={`w-9 h-9 rounded-xl border border-black/5 shadow-sm ${msg.role === "assistant" ? "bg-zinc-950" : "bg-white"}`}>
-                      {msg.role === "assistant" ? <AvatarImage src="/bot-avatar.png" className="p-1.5" /> : <AvatarImage src={selectedConv?.user.avatar} />}
-                      <AvatarFallback className={msg.role === "assistant" ? "bg-zinc-950 text-white" : "bg-primary/5 text-primary"}>
-                        {msg.role === "assistant" ? "AI" : "H"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  <div className={`flex flex-col gap-2 max-w-[80%] xl:max-w-[70%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div 
-                      className={`
-                        relative p-5 rounded-[28px] text-sm leading-relaxed shadow-sm
-                        ${msg.role === "user" 
-                          ? "bg-zinc-950 text-white rounded-br-sm shadow-zinc-950/10" 
-                          : "bg-white text-zinc-800 rounded-bl-sm ring-1 ring-black/[0.03]"}
-                        ${msg.highlight ? "ring-2 ring-primary/20 bg-primary/[0.02]" : ""}
-                      `}
-                    >
-                      {msg.text}
-                      
-                      {msg.source && (
-                        <div className="mt-4 pt-3 border-t border-muted/50 flex flex-col gap-2">
-                          <div className="flex items-center gap-2 text-xs font-bold text-primary">
-                             <ShieldCheck className="w-3.5 h-3.5" /> Verified Source
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-colors">
-                             <div className="flex items-center gap-2">
-                               <Globe className="w-3.5 h-3.5 text-primary" />
-                               <span className="text-[11px] font-bold truncate max-w-[150px]">{msg.source}</span>
-                             </div>
-                             <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </div>
-                      )}
+              {messages.map((msg) => {
+                const role = msg.role.toLowerCase();
+                const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const sources = msg.sources as any[];
+                
+                return (
+                  <div key={msg.id} className={`flex gap-4 ${role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                    <div className="pt-2">
+                      <Avatar className={`w-9 h-9 rounded-xl border border-black/5 shadow-sm ${role === "assistant" ? "bg-zinc-950" : "bg-white"}`}>
+                        {role === "assistant" ? (
+                          <AvatarImage src={selectedConv?.chatbot?.avatar || "/bot-avatar.png"} className="p-1.5" />
+                        ) : (
+                          <AvatarImage src={selectedConv?.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedConv?.id}`} />
+                        )}
+                        <AvatarFallback className={role === "assistant" ? "bg-zinc-950 text-white" : "bg-primary/5 text-primary"}>
+                          {role === "assistant" ? "AI" : (selectedConv?.user?.name?.charAt(0) || "U")}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <span className="text-[10px] font-bold text-muted-foreground px-2 flex items-center gap-2 italic">
-                       {msg.time}
-                       {msg.role === "assistant" && <Check className="w-3 h-3 text-emerald-500" />}
-                    </span>
+                    
+                    <div className={`flex flex-col gap-2 max-w-[80%] xl:max-w-[70%] ${role === "user" ? "items-end" : "items-start"}`}>
+                      <div 
+                        className={`
+                          relative p-5 rounded-[28px] text-sm leading-relaxed shadow-sm
+                          ${role === "user" 
+                            ? "bg-zinc-950 text-white rounded-br-sm shadow-zinc-950/10" 
+                            : "bg-white text-zinc-800 rounded-bl-sm ring-1 ring-black/[0.03]"}
+                        `}
+                      >
+                        {msg.content}
+                        
+                        {sources && sources.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-muted/50 flex flex-col gap-2">
+                            <div className="flex items-center gap-2 text-xs font-bold text-primary">
+                               <ShieldCheck className="w-3.5 h-3.5" /> Verified Source
+                            </div>
+                            {sources.slice(0, 2).map((src: any, idx: number) => (
+                              <div key={idx} className="p-2.5 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-colors">
+                                 <div className="flex items-center gap-2">
+                                   <Globe className="w-3.5 h-3.5 text-primary" />
+                                   <span className="text-[11px] font-bold truncate max-w-[150px]">{src.title || src.url}</span>
+                                 </div>
+                                 <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold text-muted-foreground px-2 flex items-center gap-2 italic">
+                         {time}
+                         {role === "assistant" && <Check className="w-3 h-3 text-emerald-500" />}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {isTyping && (
                 <div className="flex gap-4">
@@ -417,12 +423,6 @@ export default function InboxPage() {
                  <Textarea 
                    placeholder="Type a message or use '/' for shortcuts..."
                    className="flex-1 min-h-[48px] max-h-32 border-none bg-transparent focus-visible:ring-0 resize-none font-medium text-sm py-4 px-4 placeholder:text-muted-foreground/50"
-                   onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        // Handle send
-                      }
-                   }}
                  />
 
                  <div className="flex gap-1">
@@ -450,11 +450,14 @@ export default function InboxPage() {
            
            <div className="flex flex-col items-center text-center gap-3">
              <div className="w-24 h-24 rounded-[32px] overflow-hidden p-1.5 bg-gradient-to-br from-primary/20 to-primary/5 shadow-xl shadow-primary/5">
-                <img src={selectedConv?.user.avatar} className="w-full h-full object-cover rounded-[24px]" />
+                <Avatar className="w-full h-full rounded-[24px]">
+                  <AvatarImage src={selectedConv?.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedConv?.id}`} className="object-cover" />
+                  <AvatarFallback className="text-2xl">{selectedConv?.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                </Avatar>
              </div>
              <div>
-               <h3 className="font-bold text-lg">{selectedConv?.user.name}</h3>
-               <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1"><Mail className="w-3 h-3" /> {selectedConv?.user.email}</p>
+               <h3 className="font-bold text-lg">{selectedConv?.user?.name || "Ziyaretçi"}</h3>
+               <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1"><Mail className="w-3 h-3" /> {selectedConv?.user?.email || "Email yok"}</p>
              </div>
              <div className="flex gap-2 w-full pt-2">
                 <Button variant="outline" className="flex-1 rounded-xl h-9 text-[11px] font-bold">Follow up</Button>
@@ -467,12 +470,12 @@ export default function InboxPage() {
                  <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Metadata</span>
                  <div className="p-3 bg-muted/30 rounded-2xl border border-black/[0.02] space-y-2">
                     <div className="flex justify-between items-center">
-                       <span className="text-[10px] font-medium opacity-60">Language</span>
-                       <span className="text-xs font-bold uppercase">Turkish (TR)</span>
+                       <span className="text-[10px] font-medium opacity-60">Country</span>
+                       <span className="text-xs font-bold uppercase">{selectedConv?.country || "Unknown"}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                       <span className="text-[10px] font-medium opacity-60">Timezone</span>
-                       <span className="text-xs font-bold">GMT+3 (Istanbul)</span>
+                       <span className="text-[10px] font-medium opacity-60">Channel</span>
+                       <span className="text-xs font-bold uppercase">{selectedConv?.channel}</span>
                     </div>
                  </div>
               </div>
@@ -480,7 +483,7 @@ export default function InboxPage() {
               <div className="space-y-2">
                  <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Labels / Tags</span>
                  <div className="flex flex-wrap gap-1.5">
-                    {selectedConv?.tags.map(tag => (
+                    {(selectedConv?.tags as string[] || []).map(tag => (
                       <Badge key={tag} variant="secondary" className="px-3 py-1 rounded-lg text-[10px] font-bold bg-zinc-100 hover:bg-zinc-200 border-none capitalize">{tag}</Badge>
                     ))}
                     <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg border border-dashed border-muted-foreground/30"><Plus className="w-3 h-3" /></Button>
@@ -500,18 +503,18 @@ export default function InboxPage() {
                  </div>
                  <div>
                     <h4 className="font-bold text-sm">Bot Intelligence</h4>
-                    <p className="text-[10px] text-zinc-400 font-medium">Sales Assistant v2.4</p>
+                    <p className="text-[10px] text-zinc-400 font-medium">{selectedConv?.chatbot?.name}</p>
                  </div>
               </div>
 
               <div className="space-y-3">
                  <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                    <span className="text-xs font-medium text-zinc-300">Confidence</span>
-                    <span className="text-xs font-bold text-emerald-400">92%</span>
+                    <span className="text-xs font-medium text-zinc-300">Status</span>
+                    <span className="text-xs font-bold text-emerald-400">{selectedConv?.status}</span>
                  </div>
                  <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5">
-                    <span className="text-xs font-medium text-zinc-300">RAG Token Usage</span>
-                    <span className="text-xs font-bold text-blue-400">1.2k</span>
+                    <span className="text-xs font-medium text-zinc-300">Total Messages</span>
+                    <span className="text-xs font-bold text-blue-400">{messages.length}</span>
                  </div>
               </div>
 

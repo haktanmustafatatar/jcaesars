@@ -162,17 +162,51 @@ function extractStructuredData(html: string) {
       if (product) {
         result = {
           ...result,
-          title: product.name,
-          description: product.description,
-          sku: product.sku || product.mpn,
-          brand: product.brand?.name || product.brand,
-          price: product.offers?.price || product.offers?.[0]?.price,
-          currency: product.offers?.priceCurrency || product.offers?.[0]?.priceCurrency,
-          availability: product.offers?.availability || product.offers?.[0]?.availability
+          title: product.name || result.title,
+          description: product.description || result.description,
+          sku: product.sku || product.mpn || result.sku,
+          brand: product.brand?.name || product.brand || result.brand,
+          price: product.offers?.price || product.offers?.[0]?.price || result.price,
+          currency: product.offers?.priceCurrency || product.offers?.[0]?.priceCurrency || result.currency,
+          availability: product.offers?.availability || product.offers?.[0]?.availability || result.availability
         };
       }
     } catch {}
   });
+
+  // Fallback: Check for meta tags
+  if (!result.price) {
+    const ogPrice = dom.window.document.querySelector('meta[property="product:price:amount"]')?.getAttribute('content');
+    const ogCurrency = dom.window.document.querySelector('meta[property="product:price:currency"]')?.getAttribute('content');
+    if (ogPrice) {
+      result.price = ogPrice;
+      result.currency = ogCurrency;
+    }
+  }
+
+  // Fallback 2: Aggressive CSS selection for common price patterns
+  if (!result.price) {
+    const priceSelectors = [
+      '.price', '.product-price', '#price', '[itemprop="price"]', 
+      '.current-price', '.amount', '.money', '.Price'
+    ];
+    for (const selector of priceSelectors) {
+      const el = dom.window.document.querySelector(selector);
+      if (el && el.textContent) {
+        const text = el.textContent.trim();
+        // Regex for price: optionally currency, then numbers with . or ,
+        const priceMatch = text.match(/([0-9.,]+)/);
+        if (priceMatch) {
+          result.price = priceMatch[1];
+          // Try to guess currency
+          if (text.includes('$')) result.currency = 'USD';
+          else if (text.includes('€')) result.currency = 'EUR';
+          else if (text.includes('₺') || text.includes('TL')) result.currency = 'TRY';
+          break;
+        }
+      }
+    }
+  }
 
   return result;
 }
@@ -243,8 +277,8 @@ async function lightweightScrape(url: string) {
 // Website crawling
 export async function crawlWebsite({
   url,
-  maxDepth = 3,
-  limit = 100,
+  maxDepth = 5,
+  limit = 500,
   chatbotId,
   dataSourceId,
 }: {
@@ -301,7 +335,15 @@ export async function crawlWebsite({
       
       // If we got enough products, we might not need a deep crawl, 
       // but let's continue for other pages (about, contact, etc.)
-      shopifyPages.forEach((p: any) => visited.add(p.metadata.sourceURL));
+      for (const p of shopifyPages) {
+        visited.add(p.metadata.sourceURL);
+        // Also add to DataSourceUrl so it shows in the UI
+        await prisma.dataSourceUrl.upsert({
+          where: { dataSourceId_url: { dataSourceId, url: p.metadata.sourceURL } },
+          update: { status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title },
+          create: { dataSourceId, url: p.metadata.sourceURL, status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title }
+        });
+      }
     }
 
     let browser: any;
@@ -337,39 +379,48 @@ export async function crawlWebsite({
               const charCount = lightResult.data.markdown.length;
               const title = lightResult.data.metadata.title;
 
-              await prisma.dataSourceUrl.upsert({
-                where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
-                update: { 
-                  status: "COMPLETED", 
-                  lastCrawledAt: new Date(),
-                  charCount,
-                  title
-                },
-                create: { 
-                  dataSourceId, 
-                  url: currentUrl, 
-                  status: "COMPLETED", 
-                  lastCrawledAt: new Date(),
-                  charCount,
-                  title
-                }
-              });
+              try {
+                await prisma.dataSourceUrl.upsert({
+                  where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                  update: { 
+                    status: "COMPLETED", 
+                    lastCrawledAt: new Date(),
+                    charCount,
+                    title
+                  },
+                  create: { 
+                    dataSourceId, 
+                    url: currentUrl, 
+                    status: "COMPLETED", 
+                    lastCrawledAt: new Date(),
+                    charCount,
+                    title
+                  }
+                });
+              } catch (upsertErr) {
+                console.error(`[Crawler] Upsert failed for ${currentUrl}:`, upsertErr);
+              }
 
               // Discover links from lightweight if depth permits
-              if (depth < maxDepth && sitemaps.length === 0) { // Only discover if sitemaps didn't give us list
+              if (depth < maxDepth) { 
                 const dom = new JSDOM(lightResult.data.html, { url: currentUrl });
                 const links = Array.from(dom.window.document.querySelectorAll("a"))
                   .map(a => (a as HTMLAnchorElement).href)
                   .filter(href => {
                     try {
                       const u = new URL(href, currentUrl);
-                      return u.origin === baseUrl && !href.includes("#");
+                      // Skip assets and external links
+                      const isInternal = u.origin === baseUrl;
+                      const isNotAsset = !/\.(png|jpg|jpeg|gif|pdf|zip|css|js|svg)$/i.test(u.pathname);
+                      return isInternal && isNotAsset && !href.includes("#");
                     } catch { return false; }
                   });
 
                 for (const link of Array.from(new Set(links))) {
-                  if (!visited.has(link)) {
-                    queue.push({ url: link, depth: depth + 1 });
+                  // Normalize and clean link
+                  const cleanLink = link.split('#')[0].split('?')[0].replace(/\/$/, "");
+                  if (!visited.has(cleanLink) && queue.length < (limit * 2)) {
+                    queue.push({ url: cleanLink, depth: depth + 1 });
                   }
                 }
               }

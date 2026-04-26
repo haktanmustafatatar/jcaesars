@@ -64,21 +64,24 @@ export async function POST(
         .join("\n\n");
     }
 
-    // 4. Stream Response
+    // 4. Stream Response & Log Usage
     const response = await streamRAGResponse({
-      messages: messages, // Send full history including last message
-      model: (chatbot.model as any) || "gpt-4o",
+      messages: messages,
+      model: (chatbot.model as LLMModel) || "gpt-4o",
       systemPrompt: chatbot.systemPrompt,
-      context: context || "No specific context found in my knowledge base.",
+      context: context || "No specific context found.",
+      onFinish: async ({ text, usage }) => {
+        // Log Token Usage for Billing/Analytics
+        await logTokenUsage({
+          userId: chatbot.userId,
+          chatbotId: chatbot.id,
+          conversationId: `preview_${chatbot.id}`,
+          model: (chatbot.model as LLMModel) || "gpt-4o",
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        });
+      }
     });
-
-    // 5. Log usage (async)
-    // Create a temporary conversation ID for preview
-    const tempConvId = `preview_${chatbotId}`;
-    
-    // We can't easily get tokens from streamText in the same call without waiting,
-    // so we'll let the AI SDK handle it or log an estimate.
-    // For now, returning the stream.
 
     return response.toDataStreamResponse();
   } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { 
   BarChart3, 
@@ -46,53 +46,62 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-// Elite Mock Data for Charts
-const trendData = [
-  { date: "May 01", conversations: 120, satisfaction: 88, saved: 45 },
-  { date: "May 02", conversations: 150, satisfaction: 90, saved: 58 },
-  { date: "May 03", conversations: 140, satisfaction: 85, saved: 52 },
-  { date: "May 04", conversations: 190, satisfaction: 94, saved: 75 },
-  { date: "May 05", conversations: 210, satisfaction: 92, saved: 82 },
-  { date: "May 06", conversations: 180, satisfaction: 95, saved: 68 },
-  { date: "May 07", conversations: 250, satisfaction: 96, saved: 95 },
-];
-
-const sourceData = [
-  { name: "Website", value: 65, color: "#3b82f6" },
-  { name: "WhatsApp", value: 20, color: "#10b981" },
-  { name: "Instagram", value: 10, color: "#ec4899" },
-  { name: "Email", value: 5, color: "#64748b" },
-];
-
-const botPerformance = [
-  { name: "Sales Assistant", msgs: 4520, resolution: 92, status: "stable" },
-  { name: "Support Bot", msgs: 3210, resolution: 88, status: "improving" },
-  { name: "Booking Bot", msgs: 1240, resolution: 76, status: "needs_optim" },
-  { name: "Lead Gen Bot", msgs: 850, resolution: 94, status: "top_perf" },
-];
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white/90 backdrop-blur-md border border-black/5 p-4 rounded-2xl shadow-2xl">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{label}</p>
-        <div className="space-y-1">
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-sm font-bold text-zinc-800">{entry.name}:</span>
-              <span className="text-sm font-black text-primary">{entry.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState("7d");
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [period]);
+
+  const fetchAnalytics = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/analytics?period=${period}`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!data && isLoading) {
+    return <div className="flex items-center justify-center h-[60vh] font-bold text-muted-foreground animate-pulse">Intelligence is loading...</div>;
+  }
+
+  const { totalConversions, resolutionRate, totalCost, sourceData, trendData, botPerformance } = data || {
+    totalConversions: 0,
+    resolutionRate: 0,
+    totalCost: 0,
+    sourceData: [],
+    trendData: [],
+    botPerformance: []
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white/90 backdrop-blur-md border border-black/5 p-4 rounded-2xl shadow-2xl">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{label}</p>
+          <div className="space-y-1">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                <span className="text-sm font-bold text-zinc-800">{entry.name}:</span>
+                <span className="text-sm font-black text-primary">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-10">
@@ -128,10 +137,10 @@ export default function AnalyticsPage() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Total Conversions", value: "1,284", change: "+12.5%", icon: MessageSquare, color: "text-blue-500", chartColor: "#3b82f6" },
-          { title: "Resolution Rate", value: "92.4%", change: "+4.3%", icon: Target, color: "text-emerald-500", chartColor: "#10b981" },
+          { title: "Total Conversions", value: totalConversions.toLocaleString(), change: "+12.5%", icon: MessageSquare, color: "text-blue-500", chartColor: "#3b82f6" },
+          { title: "Resolution Rate", value: `${resolutionRate}%`, change: "+4.3%", icon: Target, color: "text-emerald-500", chartColor: "#10b981" },
           { title: "Satisfaction Score", value: "94/100", change: "+2.1%", icon: Users, color: "text-pink-500", chartColor: "#ec4899" },
-          { title: "AI Savings (USD)", value: "$12.4k", change: "+18%", icon: Zap, color: "text-amber-500", chartColor: "#f59e0b" },
+          { title: "AI Savings (USD)", value: `$${(totalConversions * 2.5).toLocaleString()}`, change: "+18%", icon: Zap, color: "text-amber-500", chartColor: "#f59e0b" },
         ].map((stat, i) => (
           <motion.div
             key={stat.title}
@@ -307,7 +316,7 @@ export default function AnalyticsPage() {
                   </thead>
                   <tbody className="divide-y divide-muted/40">
                      {botPerformance.map((bot) => (
-                       <tr key={bot.name} className="group hover:bg-muted/10 transition-colors">
+                       <tr key={bot.id} className="group hover:bg-muted/10 transition-colors">
                           <td className="py-5">
                              <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">

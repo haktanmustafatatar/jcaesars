@@ -52,14 +52,31 @@ export function SourceDialog({
       } else if (type === "QA") {
         payload = { type, name: name || "Q&A Knowledge", qnaList: qnaList.filter(q => q.question.trim()) };
       } else if (type === "FILE") {
-        // For Files, we would normally use FormData, but for now we'll mock the success
-        // In production, this hits an upload endpoint
-        toast.info("File upload processing initialized...");
-        setTimeout(() => {
+        if (selectedFiles.length === 0) {
+          toast.error("Please select a file first");
           setIsLoading(false);
-          onOpenChange(false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedFiles[0]);
+        formData.append("chatbotId", chatbotId);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          toast.success("File uploaded successfully");
           onSuccess();
-        }, 1500);
+          onOpenChange(false);
+          setSelectedFiles([]);
+        } else {
+          const error = await res.json();
+          toast.error(error.error || "Failed to upload file");
+        }
+        setIsLoading(false);
         return;
       }
 

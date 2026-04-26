@@ -1,61 +1,67 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { subDays } from "date-fns";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const [
-      totalUsers,
-      totalChatbots,
-      totalMessages,
-      activeSubscriptions
-    ] = await Promise.all([
-      prisma.user.count().catch(() => 0),
-      prisma.chatbot.count().catch(() => 0),
-      prisma.message.count().catch(() => 0),
-      prisma.subscription.findMany({
-        where: { status: "ACTIVE" },
-        include: { plan: true }
-      }).catch(() => [])
-    ]);
+    const { userId: clerkId } = await auth();
+    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const revenueMTD = activeSubscriptions.reduce((acc: any, sub: any) => acc + (sub.plan?.priceMonthly || 0), 0);
-    const last7Days = subDays(new Date(), 7);
-    const recentSignups = await prisma.user.count({
-      where: { createdAt: { gte: last7Days } }
-    }).catch(() => 0);
+    const user = await prisma.user.findUnique({ where: { clerkId } });
+    if (!user || (user.role !== "ADMIN" && user.role !== "SUPERADMIN")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-    const recentBots = await prisma.chatbot.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: { user: { select: { email: true } } }
-    }).catch(() => []);
+    // 1. General Stats
+    const totalUsers = await prisma.user.count();
+    const totalChatbots = await prisma.chatbot.count();
+    const totalTokens = await prisma.tokenUsage.aggregate({
+      _sum: { tokensUsed: true }
+    });
+
+    // 2. Token Usage by Day (Last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const dailyUsage = await prisma.tokenUsage.groupBy({
+      by: ['createdAt'],
+      where: { createdAt: { gte: sevenDaysAgo } },
+      _sum: { tokensUsed: true, cost: true }
+    });
+
+    // 3. Top Users by Usage
+    const topUsers = await prisma.user.findMany({
+      include: {
+        _count: { select: { chatbots: true } },
+        tokenUsages: {
+          select: { tokensUsed: true, cost: true }
+        }
+      },
+      take: 10
+    });
+
+    const formattedTopUsers = topUsers.map(u => ({
+      id: u.id,
+      name: u.name || u.email,
+      email: u.email,
+      botCount: u._count.chatbots,
+      totalTokens: u.tokenUsages.reduce((sum, t) => sum + t.tokensUsed, 0),
+      totalCost: u.tokenUsages.reduce((sum, t) => sum + t.cost, 0),
+      role: u.role
+    })).sort((a, b) => b.totalTokens - a.totalTokens);
 
     return NextResponse.json({
-      totalUsers,
-      totalChatbots,
-      totalMessages,
-      revenueMTD,
-      growth: {
-        signupsLast7Days: recentSignups,
-        percentage: totalUsers > 0 ? (recentSignups / totalUsers) * 100 : 0
+      overview: {
+        totalUsers,
+        totalChatbots,
+        totalTokens: totalTokens._sum.tokensUsed || 0,
+        totalRevenue: formattedTopUsers.reduce((sum, u) => sum + u.totalCost, 0) * 1.5 // Multiplier for profit
       },
-      recentActivity: recentBots.map((bot: any) => ({
-        type: "CHATBOT_CREATED",
-        title: "New Agent Deployed",
-        detail: `${bot.name} by ${bot.user?.email || 'System'}`,
-        time: bot.createdAt
-      }))
+      topUsers: formattedTopUsers,
+      dailyUsage
     });
   } catch (error) {
-    console.error("[AdminStatsAPI] Crashing Error:", error);
-    return NextResponse.json({ 
-      totalUsers: 0, 
-      totalChatbots: 0, 
-      totalMessages: 0, 
-      revenueMTD: 0,
-      recentActivity: [],
-      error: "Data mesh partially offline" 
-    });
+    console.error("[AdminStats] Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

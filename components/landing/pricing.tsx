@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Star, ShieldCheck, ArrowRight } from "lucide-react";
+import { Check, Star, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -10,10 +10,56 @@ import { useTranslations } from "next-intl";
 
 export function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
+  const [dbPlans, setDbPlans] = useState<any[]>([]);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState<string | null>(null);
   const t = useTranslations("Landing.Pricing");
+
+  const fetchPlans = async () => {
+    try {
+      const res = await fetch("/api/plans");
+      if (res.ok) {
+        const data = await res.json();
+        setDbPlans(data);
+      }
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
+
+  const handleCheckout = async (planId: string) => {
+    setIsCheckoutLoading(planId);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, isYearly }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        if (res.status === 401) {
+          window.location.href = "/sign-in";
+        } else {
+          alert(data.error || "Checkout failed");
+        }
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    } finally {
+      setIsCheckoutLoading(null);
+    }
+  };
 
   const plans = useMemo(() => [
     {
+      id: dbPlans.find(p => p.slug === "starter")?.id,
       name: t("plans.Starter.name"),
       description: t("plans.Starter.description"),
       monthlyPrice: 29,
@@ -30,6 +76,7 @@ export function Pricing() {
       color: "zinc",
     },
     {
+      id: dbPlans.find(p => p.slug === "elite")?.id,
       name: t("plans.Elite.name"),
       description: t("plans.Elite.description"),
       monthlyPrice: 79,
@@ -49,6 +96,7 @@ export function Pricing() {
       color: "primary",
     },
     {
+      id: dbPlans.find(p => p.slug === "enterprise")?.id,
       name: t("plans.Enterprise.name"),
       description: t("plans.Enterprise.description"),
       monthlyPrice: null,
@@ -66,7 +114,7 @@ export function Pricing() {
       href: "/contact",
       color: "zinc",
     },
-  ], [t]);
+  ], [t, dbPlans]);
 
   return (
     <section id="pricing" className="py-32 bg-zinc-50/50 relative overflow-hidden">
@@ -168,18 +216,24 @@ export function Pricing() {
                  </ul>
               </div>
 
-              <Link href={plan.href} className="mt-auto">
-                <Button
-                  className={`w-full h-16 rounded-[24px] font-black text-sm uppercase tracking-widest transition-all active:scale-95 group/btn ${
-                    plan.popular
-                      ? "bg-zinc-950 text-white hover:bg-zinc-900 shadow-2xl shadow-zinc-950/20"
-                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                  }`}
-                >
-                  {plan.cta}
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => plan.id ? handleCheckout(plan.id) : null}
+                disabled={!!isCheckoutLoading}
+                className={`w-full h-16 rounded-[24px] font-black text-sm uppercase tracking-widest transition-all active:scale-95 group/btn ${
+                  plan.popular
+                    ? "bg-zinc-950 text-white hover:bg-zinc-900 shadow-2xl shadow-zinc-950/20"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                }`}
+              >
+                {isCheckoutLoading === plan.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <>
+                    {plan.cta}
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
               
               {plan.popular && (
                 <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">

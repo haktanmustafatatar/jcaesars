@@ -187,7 +187,17 @@ export default function NewChatbotPage() {
       const fetchStatus = async () => {
         try {
           const res = await fetch(`/api/chatbots/${createdChatbotId}/status`);
-          if (!res.ok) return;
+          if (!res.ok) {
+             console.warn(`[TrainingStatus] API error: ${res.status}`);
+             return;
+          }
+          
+          const contentType = res.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+             console.error("[TrainingStatus] API returned non-JSON response:", await res.text());
+             return;
+          }
+
           const data = await res.json();
           setTrainingStatus(data);
 
@@ -274,8 +284,17 @@ export default function NewChatbotPage() {
     try {
       const res = await fetch("/api/crawl/fetch-links", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: formData.websiteUrl }),
       });
+      
+      if (!res.ok) throw new Error(`Crawl failed with status ${res.status}`);
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Crawl API returned non-JSON response");
+      }
+      
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       
@@ -336,11 +355,17 @@ export default function NewChatbotPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          links: discoveredLinks.filter(l => l.selected).map(l => l.url),
+        }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create chatbot");
+      if (!res.ok) throw new Error(`Chatbot creation failed with status ${res.status}`);
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Creation API returned non-JSON response");
       }
 
       const chatbot = await res.json();

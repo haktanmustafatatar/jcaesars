@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         dataSourceId: createdDataSources[0].id,
         userId: userId,
         maxDepth: 3,
-        limit: 100,
+        limit: 500,
       });
     }
 

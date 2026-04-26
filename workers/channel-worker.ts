@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import { prisma } from "@/lib/prisma";
-import { performRAGSearch, generateRAGResponse } from "@/lib/ai";
+import { performRAGSearch, generateRAGResponse, logTokenUsage, LLMModel } from "@/lib/ai";
 
 const redisConnection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
   maxRetriesPerRequest: null,
@@ -18,19 +18,21 @@ async function sendMetaMessage({
   recipientId,
   message,
   accessToken,
+  phoneNumberId,
 }: {
   channel: "whatsapp" | "instagram" | "facebook";
   recipientId: string;
   message: string;
   accessToken: string;
+  phoneNumberId?: string;
 }) {
   let url: string;
   let payload: any;
 
   if (channel === "whatsapp") {
     // WhatsApp Cloud API
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-    url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+    const pId = phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+    url = `https://graph.facebook.com/v22.0/${pId}/messages`;
     payload = {
       messaging_product: "whatsapp",
       recipient_type: "individual",
@@ -40,14 +42,14 @@ async function sendMetaMessage({
     };
   } else if (channel === "instagram") {
     // Instagram Graph API
-    url = `https://graph.facebook.com/v18.0/me/messages`;
+    url = `https://graph.facebook.com/v22.0/me/messages`;
     payload = {
       recipient: { id: recipientId },
       message: { text: message },
     };
   } else {
     // Facebook Messenger
-    url = `https://graph.facebook.com/v18.0/me/messages`;
+    url = `https://graph.facebook.com/v22.0/me/messages`;
     payload = {
       recipient: { id: recipientId },
       message: { text: message },
@@ -246,7 +248,8 @@ export const channelWorker = new Worker(
             channel: channel as any,
             recipientId,
             message: aiResponse.text,
-            accessToken: config.accessToken
+            accessToken: config.accessToken,
+            phoneNumberId: channelConfig.phoneNumberId || undefined
           });
         }
         // ... handle other channels (telegram, slack) as needed
@@ -259,8 +262,19 @@ export const channelWorker = new Worker(
             content: aiResponse.text,
             sources: sources as any,
             promptTokens: aiResponse.usage.promptTokens,
-            completionTokens: aiResponse.usage.completionTokens
+            completionTokens: aiResponse.usage.completionTokens,
+            tokensUsed: aiResponse.usage.totalTokens
           }
+        });
+
+        // 6. Log Token Usage for Billing
+        await logTokenUsage({
+          userId: chatbot.userId,
+          chatbotId: chatbot.id,
+          conversationId: conversation.id,
+          model: (chatbot.model as LLMModel) || "gpt-4o",
+          promptTokens: aiResponse.usage.promptTokens,
+          completionTokens: aiResponse.usage.completionTokens,
         });
 
         return { success: true, aiResponse: aiResponse.text };

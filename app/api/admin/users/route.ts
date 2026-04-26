@@ -6,7 +6,8 @@ export async function GET() {
     const users = await prisma.user.findMany({
       include: {
         chatbots: { select: { id: true } },
-        subscriptions: { include: { plan: true } }
+        subscriptions: { include: { plan: true } },
+        tokenUsage: { select: { tokensUsed: true, cost: true } }
       },
       orderBy: { createdAt: "desc" }
     });
@@ -18,21 +19,33 @@ export async function GET() {
   }
 }
 
-// Update user status (Ban/Active) or role
+// Update user role or organization plan
 export async function PATCH(req: Request) {
   try {
-    const { userId, role, status } = await req.json();
+    const { userId, role, planId } = await req.json();
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        role: role,
-        // Assuming we add a 'status' field or similar logic if needed,
-        // for now just role and metadata.
+    if (role) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role }
+      });
+    }
+
+    if (planId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { organizationId: true }
+      });
+
+      if (user?.organizationId) {
+        await prisma.organization.update({
+          where: { id: user.organizationId },
+          data: { planId }
+        });
       }
-    });
+    }
 
-    return NextResponse.json(user);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[AdminUsersAPI] PATCH Error:", error);
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });

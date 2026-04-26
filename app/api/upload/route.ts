@@ -56,9 +56,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
     }
 
-    // TODO: Cloudflare R2'ye yükle
-    // Şimdilik mock URL kullan
-    const fileUrl = `https://storage.jcaesar.agent/uploads/${Date.now()}-${file.name}`;
+    // Save file locally
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+    const filePath = `public/uploads/${fileName}`;
+    const publicPath = `/uploads/${fileName}`;
+    
+    const fs = require("fs");
+    const path = require("path");
+    const absolutePath = path.join(process.cwd(), filePath);
+    
+    fs.writeFileSync(absolutePath, buffer);
+
+    const fileUrl = publicPath;
 
     // Data source oluştur
     const dataSource = await prisma.dataSource.create({

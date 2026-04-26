@@ -46,6 +46,7 @@ import { format } from "date-fns";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("ALL");
@@ -65,8 +66,19 @@ export default function UsersPage() {
     }
   };
 
+  const fetchPlans = async () => {
+    try {
+      const res = await fetch("/api/admin/plans");
+      if (res.ok) {
+        const data = await res.json();
+        setPlans(data);
+      }
+    } catch (error) {}
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchPlans();
   }, []);
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
@@ -81,6 +93,21 @@ export default function UsersPage() {
       }
     } catch (error) {
       toast.error("Failed to update security clearance");
+    }
+  };
+
+  const handleUpdatePlan = async (userId: string, planId: string) => {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        body: JSON.stringify({ userId, planId }),
+      });
+      if (res.ok) {
+        toast.success("Organization plan recalibrated");
+        fetchUsers();
+      }
+    } catch (error) {
+      toast.error("Failed to update billing plan");
     }
   };
 
@@ -156,9 +183,10 @@ export default function UsersPage() {
                <TableRow className="border-white/5 hover:bg-transparent px-6">
                   <TableHead className="w-[300px] text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16 pl-10">Varlık</TableHead>
                   <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Yetkİ Seviyesi</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Aktif Plan</TableHead>
+                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Token / Maliyet</TableHead>
                   <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16 text-center">Neural Düğümler</TableHead>
                   <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Durum</TableHead>
-                  <TableHead className="text-[10px] font-black text-zinc-500 uppercase tracking-widest h-16">Katılım</TableHead>
                   <TableHead className="text-right h-16 pr-10"></TableHead>
                </TableRow>
             </TableHeader>
@@ -186,6 +214,26 @@ export default function UsersPage() {
                            {user.role}
                         </Badge>
                      </TableCell>
+                     <TableCell>
+                        <div className="flex flex-col">
+                           <span className="text-xs font-bold text-white uppercase tracking-tighter">
+                              {user.subscriptions?.[0]?.plan?.name || "Free Trial"}
+                           </span>
+                           <span className="text-[9px] text-zinc-500 font-bold">
+                              {user.subscriptions?.[0]?.status || "PENDING"}
+                           </span>
+                        </div>
+                     </TableCell>
+                     <TableCell>
+                        <div className="flex flex-col">
+                           <span className="text-xs font-black text-white">
+                              {user.tokenUsage?.reduce((acc: number, curr: any) => acc + curr.tokensUsed, 0).toLocaleString() || 0}
+                           </span>
+                           <span className="text-[10px] text-emerald-500 font-bold">
+                              ${user.tokenUsage?.reduce((acc: number, curr: any) => acc + curr.cost, 0).toFixed(4) || "0.0000"}
+                           </span>
+                        </div>
+                     </TableCell>
                      <TableCell className="text-center">
                         <div className="flex flex-col items-center">
                            <span className="font-black text-white">{user.chatbots?.length || 0}</span>
@@ -197,12 +245,6 @@ export default function UsersPage() {
                             <div className="w-2 h-2 rounded-full bg-green-500" />
                             <span className="text-xs font-bold text-zinc-300">AKTİF</span>
                          </div>
-                     </TableCell>
-                     <TableCell>
-                        <div className="space-y-1">
-                           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Başlangıç</p>
-                           <p className="text-xs text-white font-medium">{format(new Date(user.createdAt), 'dd MMM yyyy')}</p>
-                        </div>
                      </TableCell>
                      <TableCell className="text-right pr-10">
                         <DropdownMenu>
@@ -221,12 +263,26 @@ export default function UsersPage() {
                                  <Mail className="w-4 h-4 mr-3 text-blue-400" /> Protokol Gönder
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-white/5" />
-                              <DropdownMenuItem 
+                               <DropdownMenuItem 
                                  onClick={() => handleUpdateRole(user.id, user.role === 'ADMIN' ? 'USER' : 'ADMIN')}
                                  className="rounded-2xl px-4 py-3 text-sm font-bold text-amber-500 hover:bg-amber-500/10 cursor-pointer"
                               >
                                  <Shield className="w-4 h-4 mr-3" /> Yetki Değiştir
                               </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator className="bg-white/5" />
+                              <DropdownMenuLabel className="px-4 py-2 text-[9px] font-black text-zinc-600 uppercase tracking-widest">Plan Güncelle</DropdownMenuLabel>
+                              {plans.map(plan => (
+                                <DropdownMenuItem 
+                                  key={plan.id}
+                                  onClick={() => handleUpdatePlan(user.id, plan.id)}
+                                  className="rounded-2xl px-4 py-2 text-xs font-bold text-zinc-300 hover:bg-white/5 cursor-pointer"
+                                >
+                                  <Crown className="w-3 h-3 mr-3 text-primary" /> {plan.name}
+                                </DropdownMenuItem>
+                              ))}
+
+                              <DropdownMenuSeparator className="bg-white/5" />
                               <DropdownMenuItem className="rounded-2xl px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 cursor-pointer">
                                  <Ban className="w-4 h-4 mr-3" /> Erişimi Geri Çek
                               </DropdownMenuItem>

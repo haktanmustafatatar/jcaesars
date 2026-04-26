@@ -44,6 +44,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SourceDialog } from "@/components/dashboard/source-dialog";
 import { ChannelCard } from "@/components/dashboard/channels/channel-card";
 import { ConnectModal } from "@/components/dashboard/channels/connect-modal";
+import { MetaSelector } from "@/components/dashboard/channels/meta-selector";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,8 +74,9 @@ import { motion } from "framer-motion";
 
 export default function SettingsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const t = useTranslations("Dashboard.channels");
-  const router = useRouter(); // Use Next.js router from next/navigation for production if needed, but here we stay consistent with earlier choice if possible. Actually next/navigation is better.
+  const router = useRouter();
   const id = params.id as string;
   
   const [mounted, setMounted] = useState(false);
@@ -96,9 +99,20 @@ export default function SettingsPage() {
   const [isLoadingUrls, setIsLoadingUrls] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [isUpdatingSchedule, setIsUpdatingSchedule] = useState(false);
+  const [metaSelectorOpen, setMetaSelectorOpen] = useState(false);
+  const [metaSessionId, setMetaSessionId] = useState<string | null>(null);
 
 
   useEffect(() => {
+    const session = searchParams.get("meta_session");
+    if (session) {
+      setMetaSessionId(session);
+      setMetaSelectorOpen(true);
+      // Clean up URL
+      const newUrl = window.location.pathname + (window.location.search.replace(/[\?&]meta_session=[^&]+/, '').replace(/^&/, '?'));
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
     setMounted(true);
     fetchChatbot();
     fetchChannels();
@@ -676,12 +690,27 @@ export default function SettingsPage() {
                                       className="h-9 w-9 rounded-xl hover:bg-zinc-100 text-zinc-400"
                                       title="View Pages"
                                       onClick={async () => {
+                                        if (!id || !source.id) return;
                                         setSelectedSource(source);
                                         setUrlListDialogOpen(true);
                                         setIsLoadingUrls(true);
                                         try {
-                                          const res = await fetch(`/api/chatbots/${id}/data-sources/${source.id}/urls`);
-                                          if (res.ok) setSourceUrls(await res.json());
+                                          const controller = new AbortController();
+                                          const timeoutId = setTimeout(() => controller.abort(), 10000);
+                                          const res = await fetch(`/api/chatbots/${id}/data-sources/${source.id}/urls`, {
+                                            signal: controller.signal
+                                          });
+                                          clearTimeout(timeoutId);
+                                          if (res.ok) {
+                                            const data = await res.json();
+                                            setSourceUrls(data);
+                                          } else {
+                                            toast.error("Could not fetch page manifest");
+                                            setSourceUrls([]);
+                                          }
+                                        } catch (err) {
+                                          console.error("Fetch error:", err);
+                                          setSourceUrls([]);
                                         } finally {
                                           setIsLoadingUrls(false);
                                         }
@@ -818,6 +847,14 @@ export default function SettingsPage() {
                 type={sourceDialogType}
                 chatbotId={id}
                 onSuccess={() => fetchDataSources()}
+              />
+
+              <MetaSelector 
+                open={metaSelectorOpen}
+                onOpenChange={setMetaSelectorOpen}
+                sessionId={metaSessionId || ""}
+                chatbotId={id}
+                onSuccess={() => fetchChannels()}
               />
             </div>
 
