@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
                         dataKey="value"
                         animationDuration={1500}
                       >
-                        {sourceData.map((entry, index) => (
+                        {sourceData.map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                         ))}
                       </Pie>
@@ -277,7 +277,7 @@ export default function AnalyticsPage() {
              </div>
              
              <div className="grid grid-cols-2 gap-4 w-full mt-6">
-                {sourceData.map((entry) => (
+                {sourceData.map((entry: any) => (
                    <div key={entry.name} className="p-3 rounded-2xl bg-muted/30 flex flex-col items-center gap-1">
                       <div className="flex items-center gap-2">
                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -315,7 +315,7 @@ export default function AnalyticsPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-muted/40">
-                     {botPerformance.map((bot) => (
+                     {botPerformance.map((bot: any) => (
                        <tr key={bot.id} className="group hover:bg-muted/10 transition-colors">
                           <td className="py-5">
                              <div className="flex items-center gap-3">
