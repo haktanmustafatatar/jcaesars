@@ -7,7 +7,7 @@ export async function GET() {
       include: {
         chatbots: { select: { id: true } },
         subscriptions: { include: { plan: true } },
-        tokenUsage: { select: { tokensUsed: true, cost: true } }
+        tokenUsages: { select: { tokensUsed: true, cost: true } }
       },
       orderBy: { createdAt: "desc" }
     });
