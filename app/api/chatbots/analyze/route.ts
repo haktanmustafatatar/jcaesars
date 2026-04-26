@@ -53,10 +53,10 @@ export async function POST(req: NextRequest) {
     }
 
     const metadata = {
-      title: scrapeResult.metadata?.title || "",
-      description: scrapeResult.metadata?.description || "",
-      logo: scrapeResult.metadata?.ogImage || scrapeResult.metadata?.favicon || "",
-      language: scrapeResult.metadata?.language || "en",
+      title: (scrapeResult.metadata as any)?.title || "",
+      description: (scrapeResult.metadata as any)?.description || "",
+      logo: (scrapeResult.metadata as any)?.ogImage || (scrapeResult.metadata as any)?.favicon || "",
+      language: (scrapeResult.metadata as any)?.language || "en",
     };
 
     // 2. Generate Rich Business Context via LLM (Chatbase Logic)
