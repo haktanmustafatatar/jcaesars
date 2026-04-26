@@ -47,6 +47,10 @@ export async function POST(req: NextRequest) {
         markdown: html.slice(0, 5000), // very basic fallback
       };
     }
+    
+    if (!scrapeResult) {
+      return NextResponse.json({ error: "Failed to scrape website content" }, { status: 500 });
+    }
 
     const metadata = {
       title: scrapeResult.metadata?.title || "",
