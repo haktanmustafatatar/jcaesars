@@ -113,6 +113,7 @@ export default function SettingsPage() {
       window.history.replaceState({}, '', newUrl);
     }
   }, [searchParams]);
+  useEffect(() => {
     setMounted(true);
     fetchChatbot();
     fetchChannels();
