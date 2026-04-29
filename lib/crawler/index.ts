@@ -12,10 +12,16 @@ const turndownService = new TurndownService({
   codeBlockStyle: "fenced",
 });
 
-// Firecrawl client
-const firecrawl = new FirecrawlApp({
-  apiKey: process.env.FIRECRAWL_API_KEY || "fc-dummy-key-for-build",
-});
+// Lazy initialization for Firecrawl to avoid build-time crashes
+let _firecrawl: FirecrawlApp | null = null;
+function getFirecrawl() {
+  if (!_firecrawl) {
+    _firecrawl = new FirecrawlApp({
+      apiKey: process.env.FIRECRAWL_API_KEY || "fc-dummy-key-for-build",
+    });
+  }
+  return _firecrawl;
+}
 
 // --- HELPER WRAPPERS AND UTILITIES ---
 
@@ -845,7 +851,7 @@ async function crawlWithFirecrawl({
   chatbotId: string;
   dataSourceId: string;
 }) {
-  const crawlResponse = await firecrawl.crawlUrl(url, {
+  const crawlResponse = await getFirecrawl().crawlUrl(url, {
     limit,
     scrapeOptions: {
       formats: ["markdown", "html"],
@@ -885,13 +891,13 @@ export async function processDocument({
       content = await response.text();
     } else if (fileType === "application/pdf") {
       // PDF - Firecrawl ile scrape
-      const scrapeResult = await firecrawl.scrapeUrl(fileUrl, {
+      const scrapeResult = await getFirecrawl().scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
       content = ((scrapeResult as any).data as any)?.markdown || "";
     } else {
       // Diğer dosyalar - Firecrawl dene
-      const scrapeResult = await firecrawl.scrapeUrl(fileUrl, {
+      const scrapeResult = await getFirecrawl().scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
       content = ((scrapeResult as any).data as any)?.markdown || "";
