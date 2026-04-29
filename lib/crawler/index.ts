@@ -14,7 +14,7 @@ const turndownService = new TurndownService({
 
 // Firecrawl client
 const firecrawl = new FirecrawlApp({
-  apiKey: process.env.FIRECRAWL_API_KEY || "",
+  apiKey: process.env.FIRECRAWL_API_KEY || "fc-dummy-key-for-build",
 });
 
 // --- HELPER WRAPPERS AND UTILITIES ---

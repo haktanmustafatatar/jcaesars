@@ -7,6 +7,8 @@ const redis = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
 });
 
 redis.on("error", (err) => {
+  // Avoid logging connection errors during build time (Next.js static analysis)
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
   console.warn("[RateLimit/Redis] Connection error:", err.message);
 });
 
