@@ -7,10 +7,14 @@ async function testCrawl() {
   
   try {
     const result = await internalScrape(url);
+    if (!result.success) {
+      console.error("Crawl Failed:", result.error);
+      return;
+    }
     console.log("Crawl Success!");
-    console.log("Title:", result.title);
-    console.log("Content Length:", result.content.length);
-    console.log("Snippet:", result.content.substring(0, 200));
+    console.log("Title:", result.data.metadata.title);
+    console.log("Content Length:", result.data.markdown.length);
+    console.log("Snippet:", result.data.markdown.substring(0, 200));
   } catch (error) {
     console.error("Crawl Failed:", error);
   } finally {
