@@ -120,6 +120,7 @@ model Chatbot {
   dataSources        DataSource[]
   suggestedQuestions SuggestedQuestion[]
   tokenUsages        TokenUsage[]
+  knowledgeSources   KnowledgeSource[]
 }
 
 model SuggestedQuestion {
@@ -172,18 +173,21 @@ model DataSourceUrl {
 }
 
 model Document {
-  id           String                 @id @default(cuid())
-  dataSourceId String
-  content      String
-  url          String?
-  title        String?
-  metadata     Json?
-  embedding    Unsupported("vector")?
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  dataSource   DataSource             @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  id                String                 @id @default(cuid())
+  dataSourceId      String?
+  knowledgeSourceId String?
+  content           String
+  url               String?
+  title             String?
+  metadata          Json?
+  embedding         Unsupported("vector")?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  dataSource        DataSource?            @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  knowledgeSource   KnowledgeSource?       @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@index([dataSourceId])
+  @@index([knowledgeSourceId])
 }
 
 model Conversation {
@@ -409,4 +413,19 @@ enum ActionType {
   FORM
   LEAD_CAPTURE
   GOOGLE_CALENDAR
+}
+
+model KnowledgeSource {
+  id        String   @id @default(cuid())
+  chatbotId String
+  type      String
+  name      String
+  url       String?
+  fileUrl   String?
+  content   String?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chatbot   Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  documents Document[]
 }

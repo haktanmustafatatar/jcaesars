@@ -72,7 +72,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-export default function SettingsPage() {
+function SettingsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const t = useTranslations("Dashboard.channels");
@@ -1146,5 +1146,15 @@ export default function SettingsPage() {
       </Tabs>
     </div>
 
+  );
+}
+
+import { Suspense } from "react";
+
+export default function WrappedSettingsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-10 h-10 text-zinc-300 animate-spin" /></div>}>
+      <SettingsPage />
+    </Suspense>
   );
 }

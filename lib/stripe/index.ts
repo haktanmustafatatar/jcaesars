@@ -172,6 +172,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 gün
     },
   });
+
+  // Kullanıcının organizasyonunu bul ve planını güncelle
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true }
+  });
+
+  if (user?.organizationId) {
+    await prisma.organization.update({
+      where: { id: user.organizationId },
+      data: { planId }
+    });
+  }
 }
 
 // Ödeme başarılı

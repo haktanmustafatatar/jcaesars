@@ -10,6 +10,8 @@ import {
   BarChart3,
   Settings,
   Plus,
+  Brain,
+  Database,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -27,6 +29,7 @@ export function DashboardSidebar() {
   const navItems = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/dashboard/chatbots", label: t("chatbots"), icon: Bot },
+    { href: "/dashboard/knowledge", label: "Knowledge Base", icon: Brain },
     { href: "/dashboard/inbox", label: t("conversations"), icon: MessageSquare },
     { href: "/dashboard/analytics", label: t("analytics"), icon: BarChart3 },
     { href: "/dashboard/settings", label: t("settings"), icon: Settings },

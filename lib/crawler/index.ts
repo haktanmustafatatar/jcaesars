@@ -1,4 +1,3 @@
-import FirecrawlApp from "@mendable/firecrawl-js";
 import { prisma } from "@/lib/prisma";
 import { createEmbedding } from "@/lib/ai";
 import { chromium } from "playwright";
@@ -13,9 +12,10 @@ const turndownService = new TurndownService({
 });
 
 // Lazy initialization for Firecrawl to avoid build-time crashes
-let _firecrawl: FirecrawlApp | null = null;
-function getFirecrawl() {
+let _firecrawl: any = null;
+async function getFirecrawl() {
   if (!_firecrawl) {
+    const FirecrawlApp = (await import("@mendable/firecrawl-js")).default;
     _firecrawl = new FirecrawlApp({
       apiKey: process.env.FIRECRAWL_API_KEY || "fc-dummy-key-for-build",
     });
@@ -287,12 +287,14 @@ export async function crawlWebsite({
   limit = 500,
   chatbotId,
   dataSourceId,
+  knowledgeSourceId,
 }: {
   url: string;
   maxDepth?: number;
   limit?: number;
   chatbotId: string;
-  dataSourceId: string;
+  dataSourceId?: string;
+  knowledgeSourceId?: string;
 }) {
   try {
     // Normalize URL - handle cases where user might have added extra protocol or spaces
@@ -546,10 +548,11 @@ export async function crawlWebsite({
 
         // pgvector için raw SQL (URL ve Title zorunlu)
         await prisma.$executeRaw`
-          INSERT INTO "Document" ("id", "dataSourceId", "content", "url", "title", "metadata", "embedding", "createdAt", "updatedAt")
+          INSERT INTO "Document" ("id", "dataSourceId", "knowledgeSourceId", "content", "url", "title", "metadata", "embedding", "createdAt", "updatedAt")
           VALUES (
             ${docId},
-            ${dataSourceId},
+            ${dataSourceId || null},
+            ${knowledgeSourceId || null},
             ${chunk},
             ${pageUrl},
             ${pageTitle},
@@ -566,15 +569,27 @@ export async function crawlWebsite({
     const totalSize = pages.reduce((acc, p) => acc + (p.markdown?.length || 0), 0);
 
     // Data source'u güncelle
-    await prisma.dataSource.update({
-      where: { id: dataSourceId },
-      data: {
-        status: "COMPLETED",
-        pagesCount: pages.length,
-        fileSize: totalSize, // Store actual size in bytes (approx characters)
-        lastCrawledAt: new Date(),
-      },
-    });
+    if (dataSourceId) {
+      await prisma.dataSource.update({
+        where: { id: dataSourceId },
+        data: {
+          status: "COMPLETED",
+          pagesCount: pages.length,
+          fileSize: totalSize,
+          lastCrawledAt: new Date(),
+        },
+      });
+    }
+
+    if (knowledgeSourceId) {
+      await prisma.knowledgeSource.update({
+        where: { id: knowledgeSourceId },
+        data: {
+          status: "COMPLETED",
+          updatedAt: new Date(),
+        },
+      });
+    }
 
     // Check if all sources for this chatbot are completed
     await updateChatbotStatus(chatbotId);
@@ -588,13 +603,24 @@ export async function crawlWebsite({
     console.error("Crawl error:", error);
 
     // Hata durumunu kaydet
-    await prisma.dataSource.update({
-      where: { id: dataSourceId },
-      data: {
-        status: "ERROR",
-        crawlStatus: error instanceof Error ? error.message : "Unknown error",
-      },
-    });
+    if (dataSourceId) {
+      await prisma.dataSource.update({
+        where: { id: dataSourceId },
+        data: {
+          status: "ERROR",
+          crawlStatus: error instanceof Error ? error.message : "Unknown error",
+        },
+      });
+    }
+
+    if (knowledgeSourceId) {
+      await prisma.knowledgeSource.update({
+        where: { id: knowledgeSourceId },
+        data: {
+          status: "ERROR",
+        },
+      });
+    }
 
     throw error;
   }
@@ -851,7 +877,7 @@ async function crawlWithFirecrawl({
   chatbotId: string;
   dataSourceId: string;
 }) {
-  const crawlResponse = await getFirecrawl().crawlUrl(url, {
+  const crawlResponse = await (await getFirecrawl()).crawlUrl(url, {
     limit,
     scrapeOptions: {
       formats: ["markdown", "html"],
@@ -876,11 +902,13 @@ export async function processDocument({
   fileType,
   chatbotId,
   dataSourceId,
+  knowledgeSourceId,
 }: {
   fileUrl: string;
   fileType: string;
   chatbotId: string;
-  dataSourceId: string;
+  dataSourceId?: string;
+  knowledgeSourceId?: string;
 }) {
   try {
     let content = "";
@@ -891,13 +919,13 @@ export async function processDocument({
       content = await response.text();
     } else if (fileType === "application/pdf") {
       // PDF - Firecrawl ile scrape
-      const scrapeResult = await getFirecrawl().scrapeUrl(fileUrl, {
+      const scrapeResult = await (await getFirecrawl()).scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
       content = ((scrapeResult as any).data as any)?.markdown || "";
     } else {
       // Diğer dosyalar - Firecrawl dene
-      const scrapeResult = await getFirecrawl().scrapeUrl(fileUrl, {
+      const scrapeResult = await (await getFirecrawl()).scrapeUrl(fileUrl, {
         formats: ["markdown"],
       });
       content = ((scrapeResult as any).data as any)?.markdown || "";
@@ -916,10 +944,11 @@ export async function processDocument({
       const vectorStr = `[${embedding.join(",")}]`;
 
       await prisma.$executeRaw`
-        INSERT INTO "Document" ("id", "dataSourceId", "content", "title", "metadata", "embedding", "createdAt", "updatedAt")
+        INSERT INTO "Document" ("id", "dataSourceId", "knowledgeSourceId", "content", "title", "metadata", "embedding", "createdAt", "updatedAt")
         VALUES (
           ${docId},
-          ${dataSourceId},
+          ${dataSourceId || null},
+          ${knowledgeSourceId || null},
           ${chunk},
           "Document Upload",
           ${JSON.stringify({ fileType, fileUrl })}::jsonb,
@@ -930,15 +959,27 @@ export async function processDocument({
       `;
     }
 
-    await prisma.dataSource.update({
-      where: { id: dataSourceId },
-      data: {
-        status: "COMPLETED",
-        pagesCount: 1,
-        fileSize: content.length,
-        lastCrawledAt: new Date(),
-      },
-    });
+    if (dataSourceId) {
+      await prisma.dataSource.update({
+        where: { id: dataSourceId },
+        data: {
+          status: "COMPLETED",
+          pagesCount: 1,
+          fileSize: content.length,
+          lastCrawledAt: new Date(),
+        },
+      });
+    }
+
+    if (knowledgeSourceId) {
+      await prisma.knowledgeSource.update({
+        where: { id: knowledgeSourceId },
+        data: {
+          status: "COMPLETED",
+          updatedAt: new Date(),
+        },
+      });
+    }
 
     await updateChatbotStatus(chatbotId);
 
@@ -946,13 +987,24 @@ export async function processDocument({
   } catch (error) {
     console.error("Document processing error:", error);
 
-    await prisma.dataSource.update({
-      where: { id: dataSourceId },
-      data: {
-        status: "ERROR",
-        crawlStatus: error instanceof Error ? error.message : "Unknown error",
-      },
-    });
+    if (dataSourceId) {
+      await prisma.dataSource.update({
+        where: { id: dataSourceId },
+        data: {
+          status: "ERROR",
+          crawlStatus: error instanceof Error ? error.message : "Unknown error",
+        },
+      });
+    }
+
+    if (knowledgeSourceId) {
+      await prisma.knowledgeSource.update({
+        where: { id: knowledgeSourceId },
+        data: {
+          status: "ERROR",
+        },
+      });
+    }
 
     throw error;
   }
@@ -981,8 +1033,9 @@ export async function searchDocuments({
       d.metadata,
       1 - (d.embedding <=> ${queryEmbedding}::vector) as similarity
     FROM "Document" d
-    JOIN "DataSource" ds ON d."dataSourceId" = ds.id
-    WHERE ds."chatbotId" = ${chatbotId}
+    LEFT JOIN "DataSource" ds ON d."dataSourceId" = ds.id
+    LEFT JOIN "KnowledgeSource" ks ON d."knowledgeSourceId" = ks.id
+    WHERE (ds."chatbotId" = ${chatbotId} OR ks."chatbotId" = ${chatbotId})
       AND d.embedding IS NOT NULL
     ORDER BY d.embedding <=> ${queryEmbedding}::vector
     LIMIT ${limit}

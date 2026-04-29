@@ -283,19 +283,23 @@ export async function performRAGSearch({
       dataSources: {
         where: { status: "COMPLETED" },
       },
+      knowledgeSources: {
+        where: { status: "COMPLETED" },
+      },
     },
   });
 
-  if (!chatbot || chatbot.dataSources.length === 0) {
+  if (!chatbot || (chatbot.dataSources.length === 0 && chatbot.knowledgeSources.length === 0)) {
     return { context: "", sources: [] };
   }
 
   const dataSourceIds = chatbot.dataSources.map((ds) => ds.id);
+  const knowledgeSourceIds = chatbot.knowledgeSources.map((ks) => ks.id);
 
   const documents: any[] = await prisma.$queryRaw`
     SELECT content, title, url, 1 - (embedding <=> ${vectorString}::vector) as similarity
     FROM "Document"
-    WHERE "dataSourceId" = ANY(${dataSourceIds})
+    WHERE ("dataSourceId" = ANY(${dataSourceIds}) OR "knowledgeSourceId" = ANY(${knowledgeSourceIds}))
     ORDER BY similarity DESC
     LIMIT ${limit}
   `;

@@ -38,7 +38,8 @@ export type CrawlJob = {
   maxDepth?: number;
   limit?: number;
   chatbotId: string;
-  dataSourceId: string;
+  dataSourceId?: string;
+  knowledgeSourceId?: string;
   userId: string;
 };
 

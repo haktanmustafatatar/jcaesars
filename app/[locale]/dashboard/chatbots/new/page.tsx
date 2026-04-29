@@ -53,9 +53,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useAuth } from "@clerk/nextjs";
 
 export default function NewChatbotPage() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const t = useTranslations("Dashboard.chatbots.new.wizard");
   const tSteps = useTranslations("Dashboard.chatbots.new.steps");
   
@@ -186,7 +188,12 @@ export default function NewChatbotPage() {
     if (createdChatbotId && !isTrainingComplete) {
       const fetchStatus = async () => {
         try {
-          const res = await fetch(`/api/chatbots/${createdChatbotId}/status`);
+          const token = await getToken();
+          const res = await fetch(`/api/chatbots/${createdChatbotId}/status`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
           if (!res.ok) {
              console.warn(`[TrainingStatus] API error: ${res.status}`);
              return;
@@ -233,8 +240,13 @@ export default function NewChatbotPage() {
     
     try {
       setAnalysisStatus(prev => [...prev, "Fetching brand assets..."]);
+      const token = await getToken();
       const res = await fetch("/api/chatbots/analyze", {
         method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           url: formData.websiteUrl,
           useCase: formData.useCase 
@@ -282,9 +294,13 @@ export default function NewChatbotPage() {
     }
     setIsCrawling(true);
     try {
+      const token = await getToken();
       const res = await fetch("/api/crawl/fetch-links", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ url: formData.websiteUrl }),
       });
       
@@ -350,10 +366,12 @@ export default function NewChatbotPage() {
   const handleCreate = async () => {
     try {
       setIsCreating(true);
+      const token = await getToken();
       const res = await fetch("/api/chatbots", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,

@@ -109,7 +109,7 @@ export async function PATCH(
     const updatableFields = [
       "name", "description", "systemPrompt", "welcomeMessage", "avatar", 
       "primaryColor", "model", "temperature", "maxTokens", "isPublic", "showBranding",
-      "widgetMode"
+      "widgetMode", "position"
     ];
     
     const data: any = {};

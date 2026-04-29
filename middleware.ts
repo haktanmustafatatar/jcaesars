@@ -6,8 +6,10 @@ import { routing } from "./i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 const isProtectedRoute = createRouteMatcher([
-  "/(tr|en|ru|ar|fr|de|gr)/dashboard(.*)",
-  "/(tr|en|ru|ar|fr|de|gr)/admin(.*)",
+  "/:locale/dashboard(.*)",
+  "/dashboard(.*)",
+  "/:locale/admin(.*)",
+  "/admin(.*)",
   "/api/chatbots(.*)",
   "/api/conversations(.*)",
   "/api/settings(.*)",
@@ -16,7 +18,8 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 const isAdminRoute = createRouteMatcher([
-  "/(tr|en|ru|ar|fr|de|gr)/admin(.*)",
+  "/:locale/admin(.*)",
+  "/admin(.*)",
   "/api/admin(.*)",
 ]);
 
