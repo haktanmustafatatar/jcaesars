@@ -7,8 +7,8 @@ async function testCrawl() {
   
   try {
     const result = await internalScrape(url);
-    if (!result.success) {
-      console.error("Crawl Failed:", result.error);
+    if (!result.success || !result.data) {
+      console.error("Crawl Failed:", result.success ? "No data returned" : result.error);
       return;
     }
     console.log("Crawl Success!");
