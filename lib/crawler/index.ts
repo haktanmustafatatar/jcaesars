@@ -344,13 +344,15 @@ export async function crawlWebsite({
       // If we got enough products, we might not need a deep crawl, 
       // but let's continue for other pages (about, contact, etc.)
       for (const p of shopifyPages) {
-        if (!p.metadata.sourceURL) continue;
-        visited.add(p.metadata.sourceURL);
+        const sUrl = p.metadata.sourceURL;
+        if (!sUrl) continue;
+        
+        visited.add(sUrl);
         // Also add to DataSourceUrl so it shows in the UI
         await prisma.dataSourceUrl.upsert({
-          where: { dataSourceId_url: { dataSourceId, url: p.metadata.sourceURL } },
+          where: { dataSourceId_url: { dataSourceId, url: sUrl } },
           update: { status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title },
-          create: { dataSourceId, url: p.metadata.sourceURL, status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title }
+          create: { dataSourceId, url: sUrl, status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title }
         });
       }
     }
