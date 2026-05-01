@@ -348,12 +348,14 @@ export async function crawlWebsite({
         if (!sUrl) continue;
         
         visited.add(sUrl);
-        // Also add to DataSourceUrl so it shows in the UI
-        await prisma.dataSourceUrl.upsert({
-          where: { dataSourceId_url: { dataSourceId, url: sUrl } },
-          update: { status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title },
-          create: { dataSourceId, url: sUrl, status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title }
-        });
+        // Also add to DataSourceUrl so it shows in the UI if we are in a DataSource context
+        if (dataSourceId) {
+          await prisma.dataSourceUrl.upsert({
+            where: { dataSourceId_url: { dataSourceId, url: sUrl } },
+            update: { status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title },
+            create: { dataSourceId, url: sUrl, status: "COMPLETED", lastCrawledAt: new Date(), charCount: p.markdown.length, title: p.metadata.title }
+          });
+        }
       }
     }
 
@@ -390,26 +392,28 @@ export async function crawlWebsite({
               const charCount = lightResult.data.markdown.length;
               const title = lightResult.data.metadata.title;
 
-              try {
-                await prisma.dataSourceUrl.upsert({
-                  where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
-                  update: { 
-                    status: "COMPLETED", 
-                    lastCrawledAt: new Date(),
-                    charCount,
-                    title
-                  },
-                  create: { 
-                    dataSourceId, 
-                    url: currentUrl, 
-                    status: "COMPLETED", 
-                    lastCrawledAt: new Date(),
-                    charCount,
-                    title
-                  }
-                });
-              } catch (upsertErr) {
-                console.error(`[Crawler] Upsert failed for ${currentUrl}:`, upsertErr);
+              if (dataSourceId) {
+                try {
+                  await prisma.dataSourceUrl.upsert({
+                    where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                    update: { 
+                      status: "COMPLETED", 
+                      lastCrawledAt: new Date(),
+                      charCount,
+                      title
+                    },
+                    create: { 
+                      dataSourceId, 
+                      url: currentUrl, 
+                      status: "COMPLETED", 
+                      lastCrawledAt: new Date(),
+                      charCount,
+                      title
+                    }
+                  });
+                } catch (upsertErr) {
+                  console.error(`[Crawler] Upsert failed for ${currentUrl}:`, upsertErr);
+                }
               }
 
               // Discover links from lightweight if depth permits
@@ -479,23 +483,25 @@ export async function crawlWebsite({
                 }
               });
 
-              await prisma.dataSourceUrl.upsert({
-                where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
-                update: { 
-                  status: "COMPLETED", 
-                  lastCrawledAt: new Date(),
-                  charCount: markdown.length,
-                  title: structuredData.title || article.title || pageTitle
-                },
-                create: { 
-                  dataSourceId, 
-                  url: currentUrl, 
-                  status: "COMPLETED", 
-                  lastCrawledAt: new Date(),
-                  charCount: markdown.length,
-                  title: structuredData.title || article.title || pageTitle
-                },
-              });
+              if (dataSourceId) {
+                await prisma.dataSourceUrl.upsert({
+                  where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                  update: { 
+                    status: "COMPLETED", 
+                    lastCrawledAt: new Date(),
+                    charCount: markdown.length,
+                    title: structuredData.title || article.title || pageTitle
+                  },
+                  create: { 
+                    dataSourceId, 
+                    url: currentUrl, 
+                    status: "COMPLETED", 
+                    lastCrawledAt: new Date(),
+                    charCount: markdown.length,
+                    title: structuredData.title || article.title || pageTitle
+                  },
+                });
+              }
             }
             await pageInstance.close();
           } catch (err) {
