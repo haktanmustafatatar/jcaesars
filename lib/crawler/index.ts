@@ -506,11 +506,13 @@ export async function crawlWebsite({
             await pageInstance.close();
           } catch (err) {
             console.error(`[Crawler] Failed to scrape ${currentUrl}:`, err);
-            await prisma.dataSourceUrl.upsert({
-              where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
-              update: { status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" },
-              create: { dataSourceId, url: currentUrl, status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" }
-            });
+            if (dataSourceId) {
+              await prisma.dataSourceUrl.upsert({
+                where: { dataSourceId_url: { dataSourceId, url: currentUrl } },
+                update: { status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" },
+                create: { dataSourceId, url: currentUrl, status: "ERROR", errorMessage: err instanceof Error ? err.message : "Scrape failed" }
+              });
+            }
           }
         }));
       }
