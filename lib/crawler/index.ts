@@ -523,7 +523,7 @@ export async function crawlWebsite({
     if (pages.length === 0) {
       // Eğer dahili tarayıcı hiç sonuç bulamadıysa Firecrawl dene (Opsiyonel B Planı)
       console.log(`[Crawler] Internal crawl yielded 0 pages. Trying Firecrawl as fallback...`);
-      return crawlWithFirecrawl({ url, maxDepth, limit, chatbotId, dataSourceId });
+      return crawlWithFirecrawl({ url, maxDepth, limit, chatbotId, dataSourceId, knowledgeSourceId });
     }
 
     // 2. Process each page
@@ -881,12 +881,14 @@ async function crawlWithFirecrawl({
   limit,
   chatbotId,
   dataSourceId,
+  knowledgeSourceId,
 }: {
   url: string;
   maxDepth: number;
   limit: number;
   chatbotId: string;
-  dataSourceId: string;
+  dataSourceId?: string;
+  knowledgeSourceId?: string;
 }) {
   const crawlResponse = await (await getFirecrawl()).crawlUrl(url, {
     limit,
