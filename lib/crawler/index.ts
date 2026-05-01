@@ -344,6 +344,7 @@ export async function crawlWebsite({
       // If we got enough products, we might not need a deep crawl, 
       // but let's continue for other pages (about, contact, etc.)
       for (const p of shopifyPages) {
+        if (!p.metadata.sourceURL) continue;
         visited.add(p.metadata.sourceURL);
         // Also add to DataSourceUrl so it shows in the UI
         await prisma.dataSourceUrl.upsert({
