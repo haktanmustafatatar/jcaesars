@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id } = await params;
+    const { id } = await context.params;
 
     // Check ownership through chatbot
     const source = await prisma.knowledgeSource.findUnique({
